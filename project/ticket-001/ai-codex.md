@@ -23,6 +23,12 @@ governance seed-baseline commit because this repository has an unborn `HEAD`;
 it does not authorize remote creation, push, pull request, tag, release, or
 merge.
 
+On 2026-08-14 the user instructed `wypchnij wszystko`, expanding the session
+authorization to creation of the public `wellmanifest/code-dsl` remote,
+implementation commit, ticket-branch push, and pull-request creation. It does
+not replace independent current-head merge approval and does not authorize a
+tag or release.
+
 ## Execution plan
 
 1. Establish an immutable local governance baseline from the published
@@ -41,7 +47,47 @@ merge.
 - Selected `code-dsl` as the repository name and `wellmanifest.code` as the
   stable DSL namespace.
 - Adopted published `wellmanifest/new-project` v0.17.0 by immutable commit.
-- Kept remote repository creation and publication outside this authorization.
+- Created the one authorized local governance seed-baseline commit
+  `368ed0bde1965f402e93f4a041e16e43b9c27b85` and recorded it as the delivery
+  base before adding implementation files.
+- Opened local ticket branch `ticket/001-code-dsl-standard`; no remote was
+  configured.
+- Initially kept remote repository creation and publication outside the first
+  authorization, then recorded the user's explicit publication instruction.
+- Created the public `wellmanifest/code-dsl` GitHub repository, enabled
+  automatic deletion of merged head branches, and pushed only the governed
+  seed baseline to `main` before publishing implementation work.
+- Defined `wellmanifest.code/v1` in proto3 and a closed
+  `wellmanifest.code/json/v1` projection.
+- Defined exactly six read-only LSP 3.17 operations and operation-specific
+  query/result invariants.
+- Added stable semantic URI versus mutable artifact URI rules, parsed root
+  confinement, path-traversal rejection, freshness, completeness, and server,
+  workspace, Git, document, and configuration provenance.
+- Added one valid end-to-end document set covering every operation and one
+  fail-closed fixture covering unstable identity, root escape, bad operands,
+  and language limits.
+- Added the dependency-free `code_dsl_check.py`, built-in mutation tests, nine
+  unit tests, and deterministic ordering/correlation checks.
+- Added the Wellmanifest DSL adoption manifest with an immutable lock to
+  `wellmanifest/dsl`, exact artifact digests, typed LLM input boundary, and
+  normalized diagnostic documentation.
+- Added architecture and logic-flow guidance with five Mermaid diagrams.
+- Validated locally and in a networkless read-only Python 3.12 container.
+
+## Acceptance evidence
+
+- AC-01/AC-04/AC-05/AC-06: `spec/CODE_DSL_STANDARD.md`.
+- AC-02: `proto/wellmanifest/code/v1/code_dsl.proto`; `grpc_tools.protoc` PASS.
+- AC-03: `schemas/code-dsl.schema.json`; Draft 2020-12 metaschema and fixture
+  validation PASS.
+- AC-07: `examples/valid/subactor-workspace.code-dsl.json` and
+  `examples/invalid/boundary-and-limit.code-dsl.json`.
+- AC-08: `src/code_dsl_check.py`, `tests/test_code_dsl.py`; self-test and all
+  nine unit tests PASS.
+- AC-09: `docs/ARCHITECTURE.md`, `docs/LOGIC_FLOW.md`, and diagnostic pages.
+- AC-10: governance, DSL manifest/hash, Ruff, compile, schema, links, scans,
+  container, diff, and test checks recorded in `ai-codex-logs.txt`.
 
 ## Risks
 
@@ -56,6 +102,15 @@ merge.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
-- New authority remains required for destructive action, secret access, new
-  external coordination, material objective expansion and trusted merge.
+- None for the requested local standard and repository.
+- Remote creation, implementation commit, branch push, and pull-request
+  creation are now authorized. Trusted merge and release approval remain
+  separate external boundaries.
+
+## Unfinished scope
+
+- Local Mermaid rendering is not evidenced because the installed CLI could not
+  access the snap-confined Chromium binary. The diagrams were discovered, but
+  a render pass is not claimed.
+- Tag, release, and merge remain outside the publication instruction until the
+  exact pushed head passes protected checks and independent review.
