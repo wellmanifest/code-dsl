@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://wellmanifest.dev/schemas/code-dsl/v1",
+  "$id": "https://wellmanifest.com/schemas/code-dsl/v1",
   "title": "Wellmanifest Code DSL JSON projection",
   "type": "object",
   "additionalProperties": false,
