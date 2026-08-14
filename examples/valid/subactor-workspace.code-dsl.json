@@ -1,5 +1,5 @@
 {
-  "$schema": "https://wellmanifest.dev/schemas/code-dsl/v1",
+  "$schema": "https://wellmanifest.com/schemas/code-dsl/v1",
   "schema": "wellmanifest.code/json/v1",
   "documents": [
     {

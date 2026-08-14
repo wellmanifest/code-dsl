@@ -1,5 +1,5 @@
 {
-  "$schema": "https://wellmanifest.dev/schemas/dsl-manifest/v1",
+  "$schema": "https://wellmanifest.com/schemas/dsl-manifest/v1",
   "schema": "wellmanifest.dsl/manifest/v1",
   "id": "wellmanifest.code",
   "name": "Wellmanifest Code DSL",
@@ -99,7 +99,7 @@
   "namespaces": [
     {
       "prefix": "code",
-      "uri": "https://wellmanifest.dev/code/"
+      "uri": "https://wellmanifest.com/code/"
     },
     {
       "prefix": "subactor",
@@ -141,11 +141,11 @@
   "llm": {
     "mode": "input",
     "requestSchemas": [
-      "https://wellmanifest.dev/schemas/code-dsl/v1"
+      "https://wellmanifest.com/schemas/code-dsl/v1"
     ],
     "responseSchemas": [],
     "naturalLanguage": "typed-source-only",
-    "sourceSchema": "https://wellmanifest.dev/schemas/code-dsl/v1",
+    "sourceSchema": "https://wellmanifest.com/schemas/code-dsl/v1",
     "modelAuthority": "propose-only",
     "strict": true
   },
@@ -233,7 +233,7 @@
         "revision": "b7d0595c95e5abbb48ebfdbdae0bc6d43c6f82f4",
         "contracts": [
           {
-            "ref": "https://wellmanifest.dev/schemas/dsl-manifest/v1",
+            "ref": "https://wellmanifest.com/schemas/dsl-manifest/v1",
             "digest": "sha256:34d356b76bbd483372df84bb986e15bb84e9c1f8b11b7dc9e3a6c7276c85ed13"
           }
         ]
