@@ -77,3 +77,12 @@ $ git push -u origin main:main
 REMOTE_VISIBILITY=PUBLIC
 DEFAULT_BRANCH=main
 DELETE_BRANCH_ON_MERGE=true
+
+$ git commit -m "feat: define code DSL and LSP intelligence standard"
+[ticket/001-code-dsl-standard 18572ac] feat: define code DSL and LSP intelligence standard
+20 files changed, 3091 insertions(+), 17 deletions(-)
+
+$ git push -u origin ticket/001-code-dsl-standard
+[new branch] ticket/001-code-dsl-standard -> ticket/001-code-dsl-standard
+$ gh pr create --base main --head ticket/001-code-dsl-standard <metadata>
+https://github.com/wellmanifest/code-dsl/pull/1

@@ -11,3 +11,5 @@
 - Preserved remote creation and publication as an explicit follow-up boundary.
 - Recorded the user's follow-up authorization to create the public remote,
   commit the implementation, push the ticket branch, and open a pull request.
+- Published implementation commit `18572acba198b5535d03abaf81fb0fe38016f6d0`
+  through PR #1; the ticket remains active pending protected review.

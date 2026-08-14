@@ -82,4 +82,4 @@ authorized creation of the public remote, implementation commit, ticket-branch
 push, and pull-request creation. The ticket remains
 `IN_PROGRESS / PUBLICATION` through protected checks and independent
 current-head review. Merge, tag, and release are not authorized by this
-instruction.
+instruction. Publication PR: <https://github.com/wellmanifest/code-dsl/pull/1>.
