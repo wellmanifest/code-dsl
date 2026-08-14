@@ -13,3 +13,7 @@
   commit the implementation, push the ticket branch, and open a pull request.
 - Published implementation commit `18572acba198b5535d03abaf81fb0fe38016f6d0`
   through PR #1; the ticket remains active pending protected review.
+- Refreshed the schema and both fixture SHA-256 bindings after the public
+  schema-ID correction; current DSL and runtime conformance pass.
+- Recorded, without bypassing it, the pre-existing managed-governance drift
+  that still blocks protected publication.

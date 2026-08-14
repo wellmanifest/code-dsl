@@ -81,6 +81,9 @@ tag or release.
 - Validated locally and in a networkless read-only Python 3.12 container.
 - Reopened the matching integration ticket after the cross-DSL audit found
   that three artifact hashes predated the last schema-ID correction.
+- Refreshed all three hashes and passed the current DSL manifest/standards
+  checker, Code DSL runtime, nine tests, Ruff and the networkless read-only
+  Docker self-test.
 
 ## Acceptance evidence
 
@@ -113,6 +116,9 @@ tag or release.
 - Remote creation, implementation commit, branch push, and pull-request
   creation are now authorized. Trusted merge and release approval remain
   separate external boundaries.
+- The pre-existing `9179330` commit changed five managed `.governance` files
+  without a matching trusted package lock. `GOV-SYNC-001` remains fail-closed;
+  repairing that governance-owned scope is not authorized by ticket-001.
 
 ## Unfinished scope
 

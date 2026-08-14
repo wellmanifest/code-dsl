@@ -41,7 +41,7 @@ adopt this contract but is not hosted here.
   and keeps LSP evidence separate from CQRS/Event Sourcing authority.
 - [x] AC-10: Governance, unit tests, DSL manifest validation, syntax checks,
   and optional-container validation pass with recorded evidence.
-- [ ] AC-11: Refresh the three artifact digests changed by the live schema-ID
+- [x] AC-11: Refresh the three artifact digests changed by the live schema-ID
   correction, then pass current manifest and standards conformance without a
   stale provenance binding.
 
@@ -87,3 +87,13 @@ push, and pull-request creation. The ticket remains
 it returns to protected checks only after current conformance passes. Merge,
 tag, and release are not authorized by this instruction. Publication PR:
 <https://github.com/wellmanifest/code-dsl/pull/1>.
+
+## Cross-DSL follow-up
+
+The three stale schema/example digests are corrected and current DSL
+manifest, standards, runtime, unit, Ruff and isolated Docker checks pass. The
+repository governance gate still reports five `GOV-SYNC-001` findings caused
+by the earlier `9179330` edit to managed `.governance` files. Those paths are
+forbidden by this integration ticket and cannot be made trusted by rewriting
+its lock. The candidate therefore stays in `EDIT` pending a governed standard
+upgrade or restoration in the governance workstream.
