@@ -1,0 +1,419 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.com/schemas/code-dsl/v1",
+  "title": "Wellmanifest Code DSL JSON projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "documents"],
+  "properties": {
+    "$schema": { "type": "string", "format": "uri" },
+    "schema": { "const": "wellmanifest.code/json/v1" },
+    "documents": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/document" }
+    }
+  },
+  "$defs": {
+    "document": {
+      "oneOf": [
+        { "$ref": "#/$defs/workspace" },
+        { "$ref": "#/$defs/query" },
+        { "$ref": "#/$defs/snapshot" }
+      ]
+    },
+    "absoluteUri": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:[^\\s]+$"
+    },
+    "stableUri": {
+      "allOf": [
+        { "$ref": "#/$defs/absoluteUri" },
+        { "not": { "pattern": "^[Ff][Ii][Ll][Ee]:" } }
+      ]
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "sha": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["line", "character"],
+      "properties": {
+        "line": { "type": "integer", "minimum": 0 },
+        "character": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "$ref": "#/$defs/position" },
+        "end": { "$ref": "#/$defs/position" }
+      }
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactUri", "range", "domainUri"],
+      "properties": {
+        "artifactUri": { "$ref": "#/$defs/absoluteUri" },
+        "range": { "$ref": "#/$defs/range" },
+        "domainUri": {
+          "oneOf": [
+            { "$ref": "#/$defs/stableUri" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "gitState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["worktree", "branch", "revision", "dirty"],
+      "properties": {
+        "worktree": { "type": "boolean" },
+        "branch": { "type": ["string", "null"] },
+        "revision": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha" },
+            { "type": "null" }
+          ]
+        },
+        "dirty": { "type": "boolean" }
+      }
+    },
+    "languageServer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "serverId",
+        "language",
+        "command",
+        "transport",
+        "version",
+        "configurationDigest"
+      ],
+      "properties": {
+        "serverId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "language": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9+._-]*$"
+        },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "transport": { "const": "stdio" },
+        "version": { "type": "string", "minLength": 1 },
+        "configurationDigest": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "workspaceLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxLocalWorkspaces",
+        "maxRemoteWorkspaces",
+        "maxLanguagesPerWorkspace",
+        "indexingTimeoutSeconds",
+        "idleShutdownSeconds"
+      ],
+      "properties": {
+        "maxLocalWorkspaces": { "type": "integer", "minimum": 1 },
+        "maxRemoteWorkspaces": { "type": "integer", "minimum": 1 },
+        "maxLanguagesPerWorkspace": { "type": "integer", "minimum": 1 },
+        "indexingTimeoutSeconds": { "type": "integer", "minimum": 1 },
+        "idleShutdownSeconds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "workspaceId",
+        "rootUri",
+        "locality",
+        "git",
+        "languageServers",
+        "limits"
+      ],
+      "properties": {
+        "kind": { "const": "workspace" },
+        "workspaceId": { "$ref": "#/$defs/stableUri" },
+        "rootUri": { "$ref": "#/$defs/absoluteUri" },
+        "locality": { "enum": ["local", "remote"] },
+        "git": { "$ref": "#/$defs/gitState" },
+        "languageServers": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": { "$ref": "#/$defs/languageServer" }
+        },
+        "limits": { "$ref": "#/$defs/workspaceLimits" }
+      }
+    },
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "queryId",
+        "workspaceId",
+        "operation",
+        "documentUri",
+        "position",
+        "symbol",
+        "includeDeclaration",
+        "freshness",
+        "maxResults"
+      ],
+      "properties": {
+        "kind": { "const": "query" },
+        "queryId": { "$ref": "#/$defs/stableUri" },
+        "workspaceId": { "$ref": "#/$defs/stableUri" },
+        "operation": {
+          "enum": [
+            "diagnostics",
+            "hover",
+            "definition",
+            "references",
+            "document_symbols",
+            "workspace_symbols"
+          ]
+        },
+        "documentUri": {
+          "oneOf": [
+            { "$ref": "#/$defs/absoluteUri" },
+            { "type": "null" }
+          ]
+        },
+        "position": {
+          "oneOf": [
+            { "$ref": "#/$defs/position" },
+            { "type": "null" }
+          ]
+        },
+        "symbol": { "type": ["string", "null"] },
+        "includeDeclaration": { "type": ["boolean", "null"] },
+        "freshness": { "enum": ["live", "cached_allowed"] },
+        "maxResults": { "type": "integer", "minimum": 1, "maximum": 10000 }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "binding",
+        "protocolVersion",
+        "serverId",
+        "serverVersion",
+        "configurationDigest"
+      ],
+      "properties": {
+        "binding": { "const": "lsp" },
+        "protocolVersion": { "const": "3.17" },
+        "serverId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "serverVersion": { "type": "string", "minLength": 1 },
+        "configurationDigest": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "documentState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactUri", "version", "digest"],
+      "properties": {
+        "artifactUri": { "$ref": "#/$defs/absoluteUri" },
+        "version": { "type": ["integer", "null"], "minimum": 0 },
+        "digest": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspaceRevision", "dirty", "documents"],
+      "properties": {
+        "workspaceRevision": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha" },
+            { "type": "null" }
+          ]
+        },
+        "dirty": { "type": "boolean" },
+        "documents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/documentState" }
+        }
+      }
+    },
+    "symbol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domainUri",
+        "language",
+        "kind",
+        "qualifiedName",
+        "location",
+        "references",
+        "capabilities"
+      ],
+      "properties": {
+        "domainUri": { "$ref": "#/$defs/stableUri" },
+        "language": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9+._-]*$"
+        },
+        "kind": {
+          "enum": [
+            "actor",
+            "aggregate",
+            "command",
+            "event",
+            "projection",
+            "capability",
+            "service",
+            "module",
+            "type",
+            "function",
+            "method",
+            "field",
+            "variable",
+            "other"
+          ]
+        },
+        "qualifiedName": { "type": "string", "minLength": 1 },
+        "location": {
+          "oneOf": [
+            { "$ref": "#/$defs/location" },
+            { "type": "null" }
+          ]
+        },
+        "references": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableUri" }
+        },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableUri" }
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "code",
+        "severity",
+        "message",
+        "location",
+        "relatedDomainUris"
+      ],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "code": { "type": "string", "minLength": 1 },
+        "severity": { "enum": ["error", "warning", "information", "hint"] },
+        "message": { "type": "string", "minLength": 1 },
+        "location": { "$ref": "#/$defs/location" },
+        "relatedDomainUris": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableUri" }
+        }
+      }
+    },
+    "hover": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "value"],
+      "properties": {
+        "format": { "enum": ["plaintext", "markdown"] },
+        "value": { "type": "string" }
+      }
+    },
+    "results": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbols", "locations", "diagnostics", "hover"],
+      "properties": {
+        "symbols": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/symbol" }
+        },
+        "locations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/location" }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/diagnostic" }
+        },
+        "hover": {
+          "oneOf": [
+            { "$ref": "#/$defs/hover" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "snapshotId",
+        "queryId",
+        "workspaceId",
+        "operation",
+        "status",
+        "incompleteReason",
+        "producer",
+        "subject",
+        "observedAt",
+        "stale",
+        "results"
+      ],
+      "properties": {
+        "kind": { "const": "snapshot" },
+        "snapshotId": { "$ref": "#/$defs/stableUri" },
+        "queryId": { "$ref": "#/$defs/stableUri" },
+        "workspaceId": { "$ref": "#/$defs/stableUri" },
+        "operation": {
+          "enum": [
+            "diagnostics",
+            "hover",
+            "definition",
+            "references",
+            "document_symbols",
+            "workspace_symbols"
+          ]
+        },
+        "status": { "enum": ["complete", "partial", "unavailable"] },
+        "incompleteReason": { "type": ["string", "null"] },
+        "producer": { "$ref": "#/$defs/producer" },
+        "subject": { "$ref": "#/$defs/subject" },
+        "observedAt": { "type": "string", "format": "date-time" },
+        "stale": { "type": "boolean" },
+        "results": { "$ref": "#/$defs/results" }
+      }
+    }
+  }
+}

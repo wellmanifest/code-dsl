@@ -1,0 +1,406 @@
+{
+  "$schema": "https://wellmanifest.com/schemas/code-dsl/v1",
+  "schema": "wellmanifest.code/json/v1",
+  "documents": [
+    {
+      "kind": "workspace",
+      "workspaceId": "code://workspace/subactor-api",
+      "rootUri": "file:///workspace/subactor-api",
+      "locality": "local",
+      "git": {
+        "worktree": true,
+        "branch": "feature/actor-lifecycle",
+        "revision": "0123456789abcdef0123456789abcdef01234567",
+        "dirty": false
+      },
+      "languageServers": [
+        {
+          "serverId": "pyright",
+          "language": "python",
+          "command": ["pyright-langserver", "--stdio"],
+          "transport": "stdio",
+          "version": "1.1.408",
+          "configurationDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        {
+          "serverId": "rust-analyzer",
+          "language": "rust",
+          "command": ["rust-analyzer"],
+          "transport": "stdio",
+          "version": "2026-08-10",
+          "configurationDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+        },
+        {
+          "serverId": "typescript-language-server",
+          "language": "typescript",
+          "command": ["typescript-language-server", "--stdio"],
+          "transport": "stdio",
+          "version": "4.3.4",
+          "configurationDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+        }
+      ],
+      "limits": {
+        "maxLocalWorkspaces": 3,
+        "maxRemoteWorkspaces": 3,
+        "maxLanguagesPerWorkspace": 3,
+        "indexingTimeoutSeconds": 90,
+        "idleShutdownSeconds": 900
+      }
+    },
+    {
+      "kind": "query",
+      "queryId": "code://query/diagnostics-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "diagnostics",
+      "documentUri": "file:///workspace/subactor-api/src/billing.rs",
+      "position": null,
+      "symbol": null,
+      "includeDeclaration": null,
+      "freshness": "live",
+      "maxResults": 100
+    },
+    {
+      "kind": "query",
+      "queryId": "code://query/hover-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "hover",
+      "documentUri": "file:///workspace/subactor-api/src/billing.rs",
+      "position": { "line": 18, "character": 12 },
+      "symbol": null,
+      "includeDeclaration": null,
+      "freshness": "live",
+      "maxResults": 1
+    },
+    {
+      "kind": "query",
+      "queryId": "code://query/definition-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "definition",
+      "documentUri": "file:///workspace/subactor-api/src/billing.rs",
+      "position": { "line": 18, "character": 12 },
+      "symbol": null,
+      "includeDeclaration": null,
+      "freshness": "live",
+      "maxResults": 20
+    },
+    {
+      "kind": "query",
+      "queryId": "code://query/references-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "references",
+      "documentUri": "file:///workspace/subactor-api/src/billing.rs",
+      "position": { "line": 18, "character": 12 },
+      "symbol": null,
+      "includeDeclaration": true,
+      "freshness": "cached_allowed",
+      "maxResults": 200
+    },
+    {
+      "kind": "query",
+      "queryId": "code://query/document-symbols-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "document_symbols",
+      "documentUri": "file:///workspace/subactor-api/src/billing.rs",
+      "position": null,
+      "symbol": null,
+      "includeDeclaration": null,
+      "freshness": "live",
+      "maxResults": 500
+    },
+    {
+      "kind": "query",
+      "queryId": "code://query/workspace-symbols-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "workspace_symbols",
+      "documentUri": null,
+      "position": null,
+      "symbol": "billing",
+      "includeDeclaration": null,
+      "freshness": "cached_allowed",
+      "maxResults": 500
+    },
+    {
+      "kind": "snapshot",
+      "snapshotId": "code://snapshot/diagnostics-billing-001",
+      "queryId": "code://query/diagnostics-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "diagnostics",
+      "status": "complete",
+      "incompleteReason": null,
+      "producer": {
+        "binding": "lsp",
+        "protocolVersion": "3.17",
+        "serverId": "rust-analyzer",
+        "serverVersion": "2026-08-10",
+        "configurationDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "subject": {
+        "workspaceRevision": "0123456789abcdef0123456789abcdef01234567",
+        "dirty": false,
+        "documents": [
+          {
+            "artifactUri": "file:///workspace/subactor-api/src/billing.rs",
+            "version": 7,
+            "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+          }
+        ]
+      },
+      "observedAt": "2026-08-14T12:00:00Z",
+      "stale": false,
+      "results": {
+        "symbols": [],
+        "locations": [],
+        "diagnostics": [
+          {
+            "source": "rust-analyzer",
+            "code": "unresolved-import",
+            "severity": "error",
+            "message": "unresolved import billing::InvoiceCreated",
+            "location": {
+              "artifactUri": "file:///workspace/subactor-api/src/billing.rs",
+              "range": {
+                "start": { "line": 4, "character": 4 },
+                "end": { "line": 4, "character": 36 }
+              },
+              "domainUri": "subactor://event/billing.v1.InvoiceCreated"
+            },
+            "relatedDomainUris": [
+              "subactor://event/billing.v1.InvoiceCreated"
+            ]
+          }
+        ],
+        "hover": null
+      }
+    },
+    {
+      "kind": "snapshot",
+      "snapshotId": "code://snapshot/hover-billing-001",
+      "queryId": "code://query/hover-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "hover",
+      "status": "complete",
+      "incompleteReason": null,
+      "producer": {
+        "binding": "lsp",
+        "protocolVersion": "3.17",
+        "serverId": "rust-analyzer",
+        "serverVersion": "2026-08-10",
+        "configurationDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "subject": {
+        "workspaceRevision": "0123456789abcdef0123456789abcdef01234567",
+        "dirty": false,
+        "documents": [
+          {
+            "artifactUri": "file:///workspace/subactor-api/src/billing.rs",
+            "version": 7,
+            "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+          }
+        ]
+      },
+      "observedAt": "2026-08-14T12:00:01Z",
+      "stale": false,
+      "results": {
+        "symbols": [],
+        "locations": [],
+        "diagnostics": [],
+        "hover": {
+          "format": "markdown",
+          "value": "`billing.v1.InvoiceCreated` domain event"
+        }
+      }
+    },
+    {
+      "kind": "snapshot",
+      "snapshotId": "code://snapshot/definition-billing-001",
+      "queryId": "code://query/definition-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "definition",
+      "status": "complete",
+      "incompleteReason": null,
+      "producer": {
+        "binding": "lsp",
+        "protocolVersion": "3.17",
+        "serverId": "rust-analyzer",
+        "serverVersion": "2026-08-10",
+        "configurationDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "subject": {
+        "workspaceRevision": "0123456789abcdef0123456789abcdef01234567",
+        "dirty": false,
+        "documents": [
+          {
+            "artifactUri": "file:///workspace/subactor-api/src/billing.rs",
+            "version": 7,
+            "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+          }
+        ]
+      },
+      "observedAt": "2026-08-14T12:00:02Z",
+      "stale": false,
+      "results": {
+        "symbols": [],
+        "locations": [
+          {
+            "artifactUri": "file:///workspace/subactor-api/contracts/billing.proto",
+            "range": {
+              "start": { "line": 20, "character": 0 },
+              "end": { "line": 24, "character": 1 }
+            },
+            "domainUri": "subactor://event/billing.v1.InvoiceCreated"
+          }
+        ],
+        "diagnostics": [],
+        "hover": null
+      }
+    },
+    {
+      "kind": "snapshot",
+      "snapshotId": "code://snapshot/references-billing-001",
+      "queryId": "code://query/references-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "references",
+      "status": "partial",
+      "incompleteReason": "server returned an incomplete result set",
+      "producer": {
+        "binding": "lsp",
+        "protocolVersion": "3.17",
+        "serverId": "rust-analyzer",
+        "serverVersion": "2026-08-10",
+        "configurationDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "subject": {
+        "workspaceRevision": "0123456789abcdef0123456789abcdef01234567",
+        "dirty": false,
+        "documents": [
+          {
+            "artifactUri": "file:///workspace/subactor-api/src/billing.rs",
+            "version": 7,
+            "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+          }
+        ]
+      },
+      "observedAt": "2026-08-14T12:00:03Z",
+      "stale": false,
+      "results": {
+        "symbols": [],
+        "locations": [
+          {
+            "artifactUri": "file:///workspace/subactor-api/src/billing.rs",
+            "range": {
+              "start": { "line": 18, "character": 12 },
+              "end": { "line": 18, "character": 26 }
+            },
+            "domainUri": "subactor://event/billing.v1.InvoiceCreated"
+          }
+        ],
+        "diagnostics": [],
+        "hover": null
+      }
+    },
+    {
+      "kind": "snapshot",
+      "snapshotId": "code://snapshot/document-symbols-billing-001",
+      "queryId": "code://query/document-symbols-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "document_symbols",
+      "status": "complete",
+      "incompleteReason": null,
+      "producer": {
+        "binding": "lsp",
+        "protocolVersion": "3.17",
+        "serverId": "rust-analyzer",
+        "serverVersion": "2026-08-10",
+        "configurationDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "subject": {
+        "workspaceRevision": "0123456789abcdef0123456789abcdef01234567",
+        "dirty": false,
+        "documents": [
+          {
+            "artifactUri": "file:///workspace/subactor-api/src/billing.rs",
+            "version": 7,
+            "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+          }
+        ]
+      },
+      "observedAt": "2026-08-14T12:00:04Z",
+      "stale": false,
+      "results": {
+        "symbols": [
+          {
+            "domainUri": "subactor://actor/billing",
+            "language": "rust",
+            "kind": "actor",
+            "qualifiedName": "billing::BillingActor",
+            "location": {
+              "artifactUri": "file:///workspace/subactor-api/src/billing.rs",
+              "range": {
+                "start": { "line": 8, "character": 0 },
+                "end": { "line": 28, "character": 1 }
+              },
+              "domainUri": "subactor://actor/billing"
+            },
+            "references": ["subactor://event/billing.v1.InvoiceCreated"],
+            "capabilities": ["subactor://capability/payment-gateway"]
+          }
+        ],
+        "locations": [],
+        "diagnostics": [],
+        "hover": null
+      }
+    },
+    {
+      "kind": "snapshot",
+      "snapshotId": "code://snapshot/workspace-symbols-billing-001",
+      "queryId": "code://query/workspace-symbols-billing",
+      "workspaceId": "code://workspace/subactor-api",
+      "operation": "workspace_symbols",
+      "status": "complete",
+      "incompleteReason": null,
+      "producer": {
+        "binding": "lsp",
+        "protocolVersion": "3.17",
+        "serverId": "rust-analyzer",
+        "serverVersion": "2026-08-10",
+        "configurationDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "subject": {
+        "workspaceRevision": "0123456789abcdef0123456789abcdef01234567",
+        "dirty": false,
+        "documents": [
+          {
+            "artifactUri": "file:///workspace/subactor-api/src/billing.rs",
+            "version": 7,
+            "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+          }
+        ]
+      },
+      "observedAt": "2026-08-14T12:00:05Z",
+      "stale": false,
+      "results": {
+        "symbols": [
+          {
+            "domainUri": "subactor://actor/billing",
+            "language": "rust",
+            "kind": "actor",
+            "qualifiedName": "billing::BillingActor",
+            "location": {
+              "artifactUri": "file:///workspace/subactor-api/src/billing.rs",
+              "range": {
+                "start": { "line": 8, "character": 0 },
+                "end": { "line": 28, "character": 1 }
+              },
+              "domainUri": "subactor://actor/billing"
+            },
+            "references": ["subactor://event/billing.v1.InvoiceCreated"],
+            "capabilities": ["subactor://capability/payment-gateway"]
+          }
+        ],
+        "locations": [],
+        "diagnostics": [],
+        "hover": null
+      }
+    }
+  ]
+}

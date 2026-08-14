@@ -1,0 +1,213 @@
+syntax = "proto3";
+
+package wellmanifest.code.v1;
+
+// Canonical semantic contract for Wellmanifest Code DSL 0.1.
+message CodeDocumentSet {
+  repeated CodeDocument documents = 1;
+}
+
+message CodeDocument {
+  oneof document {
+    Workspace workspace = 1;
+    SemanticQuery query = 2;
+    SemanticSnapshot snapshot = 3;
+  }
+}
+
+message Workspace {
+  string workspace_id = 1;
+  string root_uri = 2;
+  WorkspaceLocality locality = 3;
+  GitState git = 4;
+  repeated LanguageServer language_servers = 5;
+  WorkspaceLimits limits = 6;
+}
+
+enum WorkspaceLocality {
+  WORKSPACE_LOCALITY_UNSPECIFIED = 0;
+  WORKSPACE_LOCALITY_LOCAL = 1;
+  WORKSPACE_LOCALITY_REMOTE = 2;
+}
+
+message GitState {
+  bool worktree = 1;
+  optional string branch = 2;
+  optional string revision = 3;
+  bool dirty = 4;
+}
+
+message LanguageServer {
+  string server_id = 1;
+  string language = 2;
+  repeated string command = 3;
+  ServerTransport transport = 4;
+  string version = 5;
+  string configuration_digest = 6;
+}
+
+enum ServerTransport {
+  SERVER_TRANSPORT_UNSPECIFIED = 0;
+  SERVER_TRANSPORT_STDIO = 1;
+}
+
+message WorkspaceLimits {
+  uint32 max_local_workspaces = 1;
+  uint32 max_remote_workspaces = 2;
+  uint32 max_languages_per_workspace = 3;
+  uint32 indexing_timeout_seconds = 4;
+  uint32 idle_shutdown_seconds = 5;
+}
+
+message SemanticQuery {
+  string query_id = 1;
+  string workspace_id = 2;
+  Operation operation = 3;
+  optional string document_uri = 4;
+  optional Position position = 5;
+  optional string symbol = 6;
+  optional bool include_declaration = 7;
+  Freshness freshness = 8;
+  uint32 max_results = 9;
+}
+
+enum Operation {
+  OPERATION_UNSPECIFIED = 0;
+  OPERATION_DIAGNOSTICS = 1;
+  OPERATION_HOVER = 2;
+  OPERATION_DEFINITION = 3;
+  OPERATION_REFERENCES = 4;
+  OPERATION_DOCUMENT_SYMBOLS = 5;
+  OPERATION_WORKSPACE_SYMBOLS = 6;
+}
+
+enum Freshness {
+  FRESHNESS_UNSPECIFIED = 0;
+  FRESHNESS_LIVE = 1;
+  FRESHNESS_CACHED_ALLOWED = 2;
+}
+
+message SemanticSnapshot {
+  string snapshot_id = 1;
+  string query_id = 2;
+  string workspace_id = 3;
+  Operation operation = 4;
+  SnapshotStatus status = 5;
+  optional string incomplete_reason = 6;
+  Producer producer = 7;
+  SnapshotSubject subject = 8;
+  string observed_at = 9;
+  bool stale = 10;
+  SemanticResults results = 11;
+}
+
+enum SnapshotStatus {
+  SNAPSHOT_STATUS_UNSPECIFIED = 0;
+  SNAPSHOT_STATUS_COMPLETE = 1;
+  SNAPSHOT_STATUS_PARTIAL = 2;
+  SNAPSHOT_STATUS_UNAVAILABLE = 3;
+}
+
+message Producer {
+  EvidenceBinding binding = 1;
+  string protocol_version = 2;
+  string server_id = 3;
+  string server_version = 4;
+  string configuration_digest = 5;
+}
+
+enum EvidenceBinding {
+  EVIDENCE_BINDING_UNSPECIFIED = 0;
+  EVIDENCE_BINDING_LSP = 1;
+}
+
+message SnapshotSubject {
+  optional string workspace_revision = 1;
+  bool dirty = 2;
+  repeated DocumentState documents = 3;
+}
+
+message DocumentState {
+  string artifact_uri = 1;
+  optional int64 version = 2;
+  string digest = 3;
+}
+
+message SemanticResults {
+  repeated SemanticSymbol symbols = 1;
+  repeated SourceLocation locations = 2;
+  repeated Diagnostic diagnostics = 3;
+  optional Hover hover = 4;
+}
+
+message SemanticSymbol {
+  string domain_uri = 1;
+  string language = 2;
+  SymbolKind kind = 3;
+  string qualified_name = 4;
+  optional SourceLocation location = 5;
+  repeated string references = 6;
+  repeated string capabilities = 7;
+}
+
+enum SymbolKind {
+  SYMBOL_KIND_UNSPECIFIED = 0;
+  SYMBOL_KIND_ACTOR = 1;
+  SYMBOL_KIND_AGGREGATE = 2;
+  SYMBOL_KIND_COMMAND = 3;
+  SYMBOL_KIND_EVENT = 4;
+  SYMBOL_KIND_PROJECTION = 5;
+  SYMBOL_KIND_CAPABILITY = 6;
+  SYMBOL_KIND_SERVICE = 7;
+  SYMBOL_KIND_MODULE = 8;
+  SYMBOL_KIND_TYPE = 9;
+  SYMBOL_KIND_FUNCTION = 10;
+  SYMBOL_KIND_METHOD = 11;
+  SYMBOL_KIND_FIELD = 12;
+  SYMBOL_KIND_VARIABLE = 13;
+  SYMBOL_KIND_OTHER = 14;
+}
+
+message Diagnostic {
+  string source = 1;
+  string code = 2;
+  DiagnosticSeverity severity = 3;
+  string message = 4;
+  SourceLocation location = 5;
+  repeated string related_domain_uris = 6;
+}
+
+enum DiagnosticSeverity {
+  DIAGNOSTIC_SEVERITY_UNSPECIFIED = 0;
+  DIAGNOSTIC_SEVERITY_ERROR = 1;
+  DIAGNOSTIC_SEVERITY_WARNING = 2;
+  DIAGNOSTIC_SEVERITY_INFORMATION = 3;
+  DIAGNOSTIC_SEVERITY_HINT = 4;
+}
+
+message Hover {
+  MarkupKind format = 1;
+  string value = 2;
+}
+
+enum MarkupKind {
+  MARKUP_KIND_UNSPECIFIED = 0;
+  MARKUP_KIND_PLAINTEXT = 1;
+  MARKUP_KIND_MARKDOWN = 2;
+}
+
+message SourceLocation {
+  string artifact_uri = 1;
+  Range range = 2;
+  optional string domain_uri = 3;
+}
+
+message Range {
+  Position start = 1;
+  Position end = 2;
+}
+
+message Position {
+  uint32 line = 1;
+  uint32 character = 2;
+}

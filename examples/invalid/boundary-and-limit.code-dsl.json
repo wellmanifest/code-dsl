@@ -1,0 +1,55 @@
+{
+  "$schema": "https://wellmanifest.com/schemas/code-dsl/v1",
+  "schema": "wellmanifest.code/json/v1",
+  "documents": [
+    {
+      "kind": "workspace",
+      "workspaceId": "file:///workspace/unstable-identity",
+      "rootUri": "file:///workspace/api",
+      "locality": "local",
+      "git": {
+        "worktree": true,
+        "branch": "feature/unsafe",
+        "revision": null,
+        "dirty": true
+      },
+      "languageServers": [
+        {
+          "serverId": "pyright",
+          "language": "python",
+          "command": ["pyright-langserver", "--stdio"],
+          "transport": "stdio",
+          "version": "1.1.408",
+          "configurationDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        {
+          "serverId": "rust-analyzer",
+          "language": "rust",
+          "command": ["rust-analyzer"],
+          "transport": "stdio",
+          "version": "2026-08-10",
+          "configurationDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+        }
+      ],
+      "limits": {
+        "maxLocalWorkspaces": 3,
+        "maxRemoteWorkspaces": 3,
+        "maxLanguagesPerWorkspace": 1,
+        "indexingTimeoutSeconds": 90,
+        "idleShutdownSeconds": 900
+      }
+    },
+    {
+      "kind": "query",
+      "queryId": "code://query/outside-root",
+      "workspaceId": "file:///workspace/unstable-identity",
+      "operation": "references",
+      "documentUri": "file:///workspace/other/secrets.rs",
+      "position": { "line": 0, "character": 0 },
+      "symbol": null,
+      "includeDeclaration": null,
+      "freshness": "live",
+      "maxResults": 10
+    }
+  ]
+}
