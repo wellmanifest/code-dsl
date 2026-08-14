@@ -1,0 +1,243 @@
+{
+  "$schema": "https://wellmanifest.dev/schemas/dsl-manifest/v1",
+  "schema": "wellmanifest.dsl/manifest/v1",
+  "id": "wellmanifest.code",
+  "name": "Wellmanifest Code DSL",
+  "version": "0.1.0-dev",
+  "status": "experimental",
+  "purpose": "Language-neutral, provenance-bound code intelligence for editors, agents, gateways, and CI",
+  "domain": "code-intelligence",
+  "owners": [
+    {
+      "kind": "repository",
+      "id": "wellmanifest/code-dsl",
+      "responsibilities": [
+        "semantics",
+        "validation",
+        "compatibility",
+        "runtime",
+        "security"
+      ]
+    }
+  ],
+  "source": {
+    "repository": "wellmanifest/code-dsl",
+    "path": "proto/wellmanifest/code/v1/code_dsl.proto",
+    "declaredVersion": "1",
+    "canonical": "protobuf",
+    "mediaType": "application/protobuf",
+    "selectors": []
+  },
+  "ownedPaths": [
+    "examples/dsl-manifest.json",
+    "spec/**",
+    "schemas/**",
+    "proto/**",
+    "examples/**",
+    "src/**",
+    "tests/**",
+    "docs/**",
+    "pyproject.toml"
+  ],
+  "artifacts": [
+    {
+      "path": "proto/wellmanifest/code/v1/code_dsl.proto",
+      "role": "normative-source",
+      "digest": "sha256:43b8863cccf3efa6b83a3477e6d29c1e71720f5dfff1ea307c07b3b46894ff63"
+    },
+    {
+      "path": "schemas/code-dsl.schema.json",
+      "role": "schema",
+      "digest": "sha256:bff8e4fa7552cc539822c17dfcf048bb294366b6374a5ca64076b948c0444d66"
+    },
+    {
+      "path": "spec/CODE_DSL_STANDARD.md",
+      "role": "documentation",
+      "digest": "sha256:d93120edff561d939f4b366d9e602b1a2727283681374a2236f94c49795ca515"
+    },
+    {
+      "path": "src/code_dsl_check.py",
+      "role": "parser-contract",
+      "digest": "sha256:dca76daf15458f41a345812c2e0e6676c4464a21f5bd7b74e11065c39a79cb44"
+    },
+    {
+      "path": "examples/valid/subactor-workspace.code-dsl.json",
+      "role": "example",
+      "digest": "sha256:af5ed63d72bd9d47c784a3bea68e98cb99943f8c8376ed3009a81112854b9812"
+    },
+    {
+      "path": "examples/invalid/boundary-and-limit.code-dsl.json",
+      "role": "example",
+      "digest": "sha256:a939d50e06db2262c77825ea4490feadbfcba84e7a0389f2f7d880bfff3a98a6"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "role": "documentation",
+      "digest": "sha256:c8bee722ee2d242cb044951781c15f896acab930cb9d7604601a70f910fe7c88"
+    },
+    {
+      "path": "docs/LOGIC_FLOW.md",
+      "role": "documentation",
+      "digest": "sha256:8085774d7056674ddd4183c2fad291787ea01b8e646abd44ece0c2ecc53dbd49"
+    },
+    {
+      "path": "docs/ERROR/CODE-SYNTAX-001.md",
+      "role": "documentation",
+      "digest": "sha256:62ce1579d03d2e7fca097f44e0cc8e9db22f9539671cb26b6b7b283c7a0b7192"
+    },
+    {
+      "path": "docs/ERROR/CODE-SEMANTIC-001.md",
+      "role": "documentation",
+      "digest": "sha256:995cfbfe18fbde4a82f81a05fe137e2bd6f737b908c75a8573e523fceca90a73"
+    },
+    {
+      "path": "docs/CRITICAL/CODE-BOUNDARY-001.md",
+      "role": "documentation",
+      "digest": "sha256:df440d4aea6702438266a00025404e85278b2db1603fd709e085876ff9a8b440"
+    }
+  ],
+  "namespaces": [
+    {
+      "prefix": "code",
+      "uri": "https://wellmanifest.dev/code/"
+    },
+    {
+      "prefix": "subactor",
+      "uri": "https://subactor.com/"
+    }
+  ],
+  "projections": [
+    {
+      "name": "closed-json",
+      "mediaType": "application/json",
+      "direction": "bidirectional",
+      "lossless": true
+    },
+    {
+      "name": "lsp-3.17-json-rpc",
+      "mediaType": "application/vscode-jsonrpc",
+      "direction": "to-canonical",
+      "lossless": false
+    },
+    {
+      "name": "workspace-yaml",
+      "mediaType": "application/yaml",
+      "direction": "to-canonical",
+      "lossless": false
+    }
+  ],
+  "lifecycle": {
+    "compatibility": "semver",
+    "stability": "experimental",
+    "breaking": "major",
+    "additive": "minor",
+    "fix": "patch"
+  },
+  "semantics": {
+    "effectModel": "descriptive",
+    "unknownPolicy": "preserve",
+    "authoritySchema": null
+  },
+  "llm": {
+    "mode": "input",
+    "requestSchemas": [
+      "https://wellmanifest.dev/schemas/code-dsl/v1"
+    ],
+    "responseSchemas": [],
+    "naturalLanguage": "typed-source-only",
+    "sourceSchema": "https://wellmanifest.dev/schemas/code-dsl/v1",
+    "modelAuthority": "propose-only",
+    "strict": true
+  },
+  "documentation": {
+    "vocabularyKind": "documents",
+    "commandRoot": "docs",
+    "errorRoot": "docs/ERROR",
+    "criticalRoot": "docs/CRITICAL",
+    "commands": [],
+    "errorCodes": [
+      "CODE-SEMANTIC-001",
+      "CODE-SYNTAX-001"
+    ],
+    "criticalCodes": [
+      "CODE-BOUNDARY-001"
+    ]
+  },
+  "findingPolicy": {
+    "schema": "wellmanifest.dsl/findings/v1",
+    "requiredProducers": [
+      "wellmanifest.code-dsl-check"
+    ],
+    "securityProducers": [
+      "wellmanifest.code-dsl-check"
+    ],
+    "blockingSeverities": [
+      "critical"
+    ],
+    "requireEvaluable": true,
+    "blockUnresolvedSecurity": true
+  },
+  "publicationPolicy": {
+    "declaredTier": "review",
+    "deterministic": true,
+    "independentReview": true,
+    "externalAuthority": false,
+    "runtimeIsolation": false
+  },
+  "conformance": {
+    "levels": [
+      "manifest",
+      "contract",
+      "runtime",
+      "llm-boundary"
+    ],
+    "commands": [
+      "python3 src/code_dsl_check.py validate examples/valid",
+      "python3 src/code_dsl_check.py self-test",
+      "python3 -m unittest discover -s tests -v"
+    ],
+    "validExamples": [
+      "examples/valid/subactor-workspace.code-dsl.json"
+    ],
+    "invalidExamples": [
+      "examples/invalid/boundary-and-limit.code-dsl.json"
+    ]
+  },
+  "mappings": [
+    {
+      "standard": "wellmanifest/dsl",
+      "version": "0.1.0-dev",
+      "relation": "extends",
+      "uri": "https://github.com/wellmanifest/dsl"
+    },
+    {
+      "standard": "microsoft/language-server-protocol",
+      "version": "3.17",
+      "relation": "maps-to",
+      "uri": "https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/"
+    },
+    {
+      "standard": "google/protobuf",
+      "version": "proto3",
+      "relation": "compatible-with",
+      "uri": "https://protobuf.dev/programming-guides/proto3/"
+    }
+  ],
+  "standardsLock": {
+    "schema": "wellmanifest.standards-lock/v1",
+    "entries": [
+      {
+        "standard": "wellmanifest.dsl",
+        "version": "0.1.0-dev",
+        "repository": "https://github.com/wellmanifest/dsl",
+        "revision": "b7d0595c95e5abbb48ebfdbdae0bc6d43c6f82f4",
+        "contracts": [
+          {
+            "ref": "https://wellmanifest.dev/schemas/dsl-manifest/v1",
+            "digest": "sha256:34d356b76bbd483372df84bb986e15bb84e9c1f8b11b7dc9e3a6c7276c85ed13"
+          }
+        ]
+      }
+    ]
+  }
+}
