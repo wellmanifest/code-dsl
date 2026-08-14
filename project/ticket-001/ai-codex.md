@@ -39,6 +39,8 @@ tag or release.
 5. Document the gateway/semantic-core boundary and LSP-first agent flow.
 6. Run governance, schema, semantic, syntax, manifest, and container checks.
 7. Review the complete diff and record remaining publication limitations.
+8. Refresh manifest digests affected by the final public schema-ID change and
+   re-run the current shared DSL checker before protected publication.
 
 ## Actual changes
 
@@ -77,6 +79,8 @@ tag or release.
   normalized diagnostic documentation.
 - Added architecture and logic-flow guidance with five Mermaid diagrams.
 - Validated locally and in a networkless read-only Python 3.12 container.
+- Reopened the matching integration ticket after the cross-DSL audit found
+  that three artifact hashes predated the last schema-ID correction.
 
 ## Acceptance evidence
 
