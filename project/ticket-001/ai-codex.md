@@ -57,6 +57,9 @@ tag or release.
 - Created the public `wellmanifest/code-dsl` GitHub repository, enabled
   automatic deletion of merged head branches, and pushed only the governed
   seed baseline to `main` before publishing implementation work.
+- Committed the implementation as
+  `18572acba198b5535d03abaf81fb0fe38016f6d0`, pushed the ticket branch, and
+  opened publication PR <https://github.com/wellmanifest/code-dsl/pull/1>.
 - Defined `wellmanifest.code/v1` in proto3 and a closed
   `wellmanifest.code/json/v1` projection.
 - Defined exactly six read-only LSP 3.17 operations and operation-specific
