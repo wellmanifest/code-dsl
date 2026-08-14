@@ -17,3 +17,7 @@
   schema-ID correction; current DSL and runtime conformance pass.
 - Recorded, without bypassing it, the pre-existing managed-governance drift
   that still blocks protected publication.
+- Rebuilt a clean candidate from the governed main baseline while retaining
+  the drifted branch unchanged as audit evidence.
+- Verified that the clean lineage has no managed-governance delta and passes
+  governance, DSL, runtime, unit, Ruff, Protobuf and isolated Docker checks.

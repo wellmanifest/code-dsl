@@ -3,7 +3,7 @@
 - **ID**: ticket-001
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Created**: 2026-08-14
 
 ## Goal and scope
@@ -82,18 +82,20 @@ adopt this contract but is not hosted here.
 
 The local implementation is complete and validated. On 2026-08-14 the user
 authorized creation of the public remote, implementation commit, ticket-branch
-push, and pull-request creation. The ticket remains
-`IN_PROGRESS / EDIT` while the cross-DSL audit repairs stale artifact digests;
-it returns to protected checks only after current conformance passes. Merge,
-tag, and release are not authorized by this instruction. Publication PR:
-<https://github.com/wellmanifest/code-dsl/pull/1>.
+push, and pull-request creation. Merge, tag, and release are not authorized by
+that instruction. Publication PR: <https://github.com/wellmanifest/code-dsl/pull/1>.
+
+The original PR branch contains unrelated managed-governance edits in its
+history and is not the publication candidate. The clean local branch
+`ticket/001-code-dsl-standard-clean` was rebuilt from exact `main@368ed0b`,
+contains only ticket-owned changes, and is ready for a separately authorized
+remote update and protected exact-head review.
 
 ## Cross-DSL follow-up
 
-The three stale schema/example digests are corrected and current DSL
-manifest, standards, runtime, unit, Ruff and isolated Docker checks pass. The
-repository governance gate still reports five `GOV-SYNC-001` findings caused
-by the earlier `9179330` edit to managed `.governance` files. Those paths are
-forbidden by this integration ticket and cannot be made trusted by rewriting
-its lock. The candidate therefore stays in `EDIT` pending a governed standard
-upgrade or restoration in the governance workstream.
+The three stale schema/example digests are corrected and current DSL manifest,
+standards, runtime, unit, Ruff, Protobuf, governance and isolated Docker checks
+pass. The earlier `9179330` lineage remains quarantined on the original branch;
+the clean candidate neither changes `.governance` nor rewrites its trusted
+lock. `GOV-PASS` now reports zero findings, so the local ticket advances to
+`PUBLICATION` without bypassing the policy boundary.

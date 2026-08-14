@@ -84,6 +84,13 @@ tag or release.
 - Refreshed all three hashes and passed the current DSL manifest/standards
   checker, Code DSL runtime, nine tests, Ruff and the networkless read-only
   Docker self-test.
+- Rebuilt the publication candidate from exact governed `main@368ed0b` and
+  replayed only ticket-owned implementation, public-host and evidence changes.
+- Left the original branch and its `9179330` managed-governance drift intact
+  for auditability; the clean branch has no `.governance` delta.
+- Passed governance with zero findings plus current DSL validate/standards,
+  runtime, nine tests, Ruff, Python compilation, Protobuf compilation and the
+  networkless read-only Docker suite on the clean lineage.
 
 ## Acceptance evidence
 
@@ -116,9 +123,9 @@ tag or release.
 - Remote creation, implementation commit, branch push, and pull-request
   creation are now authorized. Trusted merge and release approval remain
   separate external boundaries.
-- The pre-existing `9179330` commit changed five managed `.governance` files
-  without a matching trusted package lock. `GOV-SYNC-001` remains fail-closed;
-  repairing that governance-owned scope is not authorized by ticket-001.
+- The local clean candidate has no implementation blocker. The original
+  remote PR still targets the quarantined history and must not be merged as-is;
+  updating its remote head requires the separate publication boundary.
 
 ## Unfinished scope
 
