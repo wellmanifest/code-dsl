@@ -1,0 +1,44 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-001",
+  "summary": "Define Code DSL and normalized LSP intelligence standard",
+  "workstream": "integration",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-001/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "dsl-manifest.json",
+    "spec/**",
+    "schemas/**",
+    "proto/**",
+    "examples/**",
+    "src/**",
+    "tests/**",
+    "docs/**",
+    "pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".governance/**",
+    "AGENTS.md",
+    "README.md",
+    "CHANGELOG.md",
+    "VERSION",
+    ".github/**",
+    "project.sh",
+    "project.bat",
+    "project/governance-check.*",
+    "project/new-ticket.sh",
+    "project/readme.sh",
+    "scripts/runtime.sh"
+  ],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
