@@ -48,7 +48,7 @@
     {
       "path": "schemas/code-dsl.schema.json",
       "role": "schema",
-      "digest": "sha256:bff8e4fa7552cc539822c17dfcf048bb294366b6374a5ca64076b948c0444d66"
+      "digest": "sha256:ff782c1f5325d330fee22ed4805955c400c0a34655e8c2fb8082393aa497bf45"
     },
     {
       "path": "spec/CODE_DSL_STANDARD.md",
@@ -63,12 +63,12 @@
     {
       "path": "examples/valid/subactor-workspace.code-dsl.json",
       "role": "example",
-      "digest": "sha256:af5ed63d72bd9d47c784a3bea68e98cb99943f8c8376ed3009a81112854b9812"
+      "digest": "sha256:abc2a206ee3e33bd9bdf7d0272b1ace8cfc3435000d8fe34c78ca8fa7c439d7e"
     },
     {
       "path": "examples/invalid/boundary-and-limit.code-dsl.json",
       "role": "example",
-      "digest": "sha256:a939d50e06db2262c77825ea4490feadbfcba84e7a0389f2f7d880bfff3a98a6"
+      "digest": "sha256:6ac0461b9231c31aeb068c027d01528030f4bd6a9a304f9f793c76fe8764a6ba"
     },
     {
       "path": "docs/ARCHITECTURE.md",

@@ -86,3 +86,18 @@ $ git push -u origin ticket/001-code-dsl-standard
 [new branch] ticket/001-code-dsl-standard -> ticket/001-code-dsl-standard
 $ gh pr create --base main --head ticket/001-code-dsl-standard <metadata>
 https://github.com/wellmanifest/code-dsl/pull/1
+2026-08-14 cross-DSL conformance follow-up
+SESSION_EXECUTION_AUTHORIZATION=RECORDED_FROM_USER_REQUEST
+DSL_FINDINGS=DSL-HASH-001 count=3
+REMEDIATION_SCOPE=examples/dsl-manifest.json within existing ticket-001 intent
+PREEXISTING_GOVERNANCE=GOV-SYNC-001 count=5 from prior commit 9179330; outside ticket integration write scope
+IMPLEMENTATION_COMMIT=1094c73
+DSL_VALIDATE=PASS
+DSL_STANDARDS=PASS
+CODE_DSL_VALIDATE=PASS
+CODE_DSL_SELF_TEST=PASS
+UNIT_TESTS=PASS count=9
+COMPILEALL=PASS
+RUFF_CHECK_AND_FORMAT=PASS
+DOCKER_NETWORKLESS_READONLY_SELF_TEST=PASS
+GOVERNANCE=FAIL GOV-SYNC-001 count=5 pre-existing from 9179330
