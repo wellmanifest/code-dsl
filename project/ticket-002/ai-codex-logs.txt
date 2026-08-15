@@ -1,0 +1,57 @@
+TICKET=ticket-002
+ACCEPTED_BASE=155277184e3c0aca29833c797d537a2a9bc6fcbf
+TARGET_BRANCH=main
+WORKSTREAM=governance
+CLASSIFICATION=BUG/P1/regression
+
+# Defect reproduction on the accepted base
+BASE_GOVERNANCE=./project/governance-check.sh --actor agent
+BASE_RESULT=GOV-FAIL 5 errors 0 warnings
+BASE_DIAGNOSTIC=GOV-SYNC-001 .governance/diagnostics.schema.json
+BASE_DIAGNOSTIC=GOV-SYNC-001 .governance/governance_check.py
+BASE_DIAGNOSTIC=GOV-SYNC-001 .governance/manifest.base.json
+BASE_DIAGNOSTIC=GOV-SYNC-001 .governance/manifest.schema.json
+BASE_DIAGNOSTIC=GOV-SYNC-001 .governance/remediation-intent.schema.json
+BASE_CAUSE=9179330 edited lock-pinned files without regenerating the lock
+BASE_ALSO_AFFECTED=origin/ticket/001-code-dsl-standard@dc8ece0 GOV-FAIL 5 errors
+
+# Adopted standard versus upstream
+ADOPTED_STANDARD=wellmanifest/new-project 0.17.0 @ 4d0a61837245b2906ce19c75c050fea1bc12adf2
+UPSTREAM_STANDARD=wellmanifest/new-project 0.18.1
+UPSTREAM_HOST_REFS=5 files use wellmanifest.com upstream
+REMEDIATION_CHOSEN=restore-pinned-files
+REMEDIATION_REJECTED=standard-upgrade-and-lock-regeneration
+
+# Implementation
+RESTORE_SOURCE=368ed0bde1965f402e93f4a041e16e43b9c27b85
+RESTORED=.governance/diagnostics.schema.json
+RESTORED=.governance/governance_check.py
+RESTORED=.governance/manifest.base.json
+RESTORED=.governance/manifest.schema.json
+RESTORED=.governance/remediation-intent.schema.json
+REALIGNED=.governance/manifest.json signedAttestationPredicateType
+IMPLEMENTATION_FILES=6
+
+# AC-01 managed-file digest audit against the untouched lock
+MANAGED_FILES_CHECKED=34
+MANAGED_FILES_MISMATCHED=0
+LOCK_EDITED=no
+AC_01=PASS
+
+# AC-02 governance gate
+GOVERNANCE=./project/governance-check.sh --actor agent
+GOVERNANCE_RESULT=GOV-PASS: passed (0 errors, 0 warnings)
+AC_02=PASS
+
+# AC-03 published contract paths unchanged versus accepted base
+CONTRACT_DIFF=git diff --stat 1552771 -- dsl-manifest.json spec schemas proto examples src tests docs
+CONTRACT_DIFF_RESULT=empty
+AC_03=PASS
+
+# Boundary
+PUSH=not-performed
+PULL_REQUEST=not-performed
+MERGE=not-performed
+TAG=not-performed
+RELEASE=not-performed
+WORKFLOW_STATE=PUBLICATION
