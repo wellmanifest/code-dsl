@@ -1,0 +1,102 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-002",
+  "summary": "Restore managed governance lock conformance",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-002/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".governance/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".governance/manifest.lock.json",
+    ".github/**",
+    "AGENTS.md",
+    "README.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "dsl-manifest.json",
+    "spec/**",
+    "schemas/**",
+    "proto/**",
+    "examples/**",
+    "src/**",
+    "tests/**",
+    "docs/**"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "155277184e3c0aca29833c797d537a2a9bc6fcbf",
+    "targetBranch": "main",
+    "outcome": "Restore the five managed governance files and the derived governance manifest to the pinned new-project 0.17.0 content so main reports GOV-PASS without weakening or regenerating the trusted lock.",
+    "nonGoals": [
+      "Upgrade the adopted new-project governance standard to 0.18.x",
+      "Regenerate or edit .governance/manifest.lock.json",
+      "Change published Code DSL schema IDs, spec, examples or source",
+      "Refresh the stale examples/dsl-manifest.json artifact digests owned by ticket-001",
+      "Publish, merge, tag or release without protected exact-head approval"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Take the first remediation offered by GOV-SYNC-001 and restore the pinned files byte-for-byte from the governed baseline 368ed0b, rather than performing an unrequested standard upgrade that would rewrite the trusted lock inside a publication ticket.",
+      "components": [
+        {
+          "name": "managed-governance",
+          "paths": [
+            ".governance/diagnostics.schema.json",
+            ".governance/governance_check.py",
+            ".governance/manifest.base.json",
+            ".governance/manifest.json",
+            ".governance/manifest.schema.json",
+            ".governance/remediation-intent.schema.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": { "impact": "none", "states": [], "evidence": [] },
+      "rollback": "Revert the single implementation commit; the trusted lock is never modified, so the pinned baseline stays reachable."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -c \"import json,hashlib; lock=json.load(open('.governance/manifest.lock.json'))['managedFiles']; print(all(hashlib.sha256(open(f,'rb').read()).hexdigest()==d for f,d in lock.items()))\""
+        ],
+        "evidence": "project/ticket-002/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["./project/governance-check.sh --actor agent"],
+        "evidence": "project/ticket-002/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "git diff --stat 155277184e3c0aca29833c797d537a2a9bc6fcbf -- schemas proto spec src tests examples docs dsl-manifest.json"
+        ],
+        "evidence": "project/ticket-002/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
