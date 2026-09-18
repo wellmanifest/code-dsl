@@ -75,3 +75,26 @@ semantic identity.
 SQLite, an embedded key-value store, or an in-memory cache MAY be used. The
 store MUST preserve `partial`, `unavailable`, and `stale` explicitly and MUST
 NOT promote them to complete/fresh during retrieval.
+
+## Algorithmic Deterministic Engine & Tripartite Communication (semcod/algocode)
+
+To enforce code quality without human fatigue or LLM hallucination, `wellmanifest/code-dsl` composes with the **Tripartite Communication Architecture** defined by [`wellmanifest/nl-dsl-llm`](https://github.com/wellmanifest/nl-dsl-llm) and implemented by [`semcod/algocode`](https://github.com/semcod/algocode):
+
+```mermaid
+flowchart TD
+    Human[Human Engineer] -->|Natural Language / Prompt| NL[NL Intent Interface]
+    NL --> LLM[LLM Semantic Reasoner]
+    LLM -->|Canonical DSL: code.inspect / code.dedup| DSL[Canonical Code DSL Bus]
+    Human -->|Direct DSL| DSL
+    DSL --> Algo[Deterministic Algorithmic Engine: semcod/algocode]
+    Algo -->|AST Parse & Sliding-Window SHA-256| Engine[Structural Clone & Invariant Engine]
+    Engine -->|Sub-second Verification| MCP[JSON-RPC 2.0 MCP Protocol]
+    MCP -->|Structured AST Evidence / Receipts| LLM
+    MCP -->|Deterministic Diagnostic Snapshot| Human
+```
+
+### Tripartite Principles:
+1. **Human**: Communicates intent in Natural Language (PL/EN) or direct Code DSL queries.
+2. **LLM**: Operates strictly downstream of typed evidence or as a semantic translator into canonical DSL verbs (`code.inspect`, `code.dedup`, `conflict.check`). If grammar matches, execution bypasses the LLM entirely.
+3. **Algorithm (`algocode`)**: Executes deterministic AST normalization, sliding-window block hashing, and path conflict checks in <0.5s. It emits invariant proofs and structured diagnostics back into the MCP/stdio stream.
+
