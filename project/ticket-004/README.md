@@ -2,8 +2,8 @@
 
 - **ID**: ticket-004
 - **Owner**: agent
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Created**: 2026-09-18
 
 ## Goal and scope

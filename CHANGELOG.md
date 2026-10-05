@@ -7,3 +7,4 @@
 - Reserved the initial `0.1.0-dev` contract surface for workspaces, normalized
   LSP queries, semantic snapshots, stable domain URIs, and deterministic
   conformance.
+- Reconciled closed ticket records and clean governance status for tickets 003 and 004.

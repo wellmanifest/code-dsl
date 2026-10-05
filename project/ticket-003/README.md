@@ -2,8 +2,8 @@
 
 - **ID**: ticket-003
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Created**: 2026-09-16
 
 ## Goal and scope
@@ -12,7 +12,7 @@ To be completed from human-owned input.
 
 ## Acceptance criteria
 
-- [ ] AC-01: Scope is approved by a human owner.
+- [x] AC-01: Scope is approved by a human owner.
 
 ## Participants
 
