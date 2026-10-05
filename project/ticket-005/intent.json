@@ -1,0 +1,77 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-005",
+  "summary": "mark merged tickets 003 and 004 as DONE",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-005/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "project/ticket-003/README.md",
+    "project/ticket-004/README.md",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "91448c8529d8a533ff248b5f0ef4d21de92ce1f2",
+    "targetBranch": "main",
+    "outcome": "Mark merged tickets 003 and 004 as DONE and document closure in CHANGELOG.md.",
+    "nonGoals": [
+      "No runtime code changes",
+      "No governance package modifications"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Update ticket statuses in README.md to DONE for merged tickets 003 and 004, and record in CHANGELOG.md.",
+      "components": [
+        {
+          "name": "governance",
+          "paths": [
+            "CHANGELOG.md",
+            "project/ticket-003/README.md",
+            "project/ticket-004/README.md",
+            "project/TICKETS.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert status and changelog edits."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./project/governance-check.sh --base origin/main --head HEAD"
+        ],
+        "evidence": "Governance check passes with zero errors and zero warnings."
+      }
+    ]
+  }
+}
