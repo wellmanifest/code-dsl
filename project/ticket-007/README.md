@@ -1,9 +1,9 @@
 # Ticket 007: Modularize code_dsl_check under 500 lines and harden unhashable JSON and file I/O
 
 - **ID**: ticket-007
-- **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Owner**: tom
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Created**: 2026-11-11
 
 ## Goal and scope

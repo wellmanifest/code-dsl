@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import contextlib
 import copy
 import importlib.util
+import io
 import json
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "src" / "code_dsl_check.py"
@@ -216,6 +220,118 @@ class CodeDslConformanceTests(unittest.TestCase):
         bad_Refs["documents"][-1]["queryId"] = {"unhashable": 1}
         self.assertIn(code_dsl_check.SYNTAX, self.codes(bad_Refs))
         self.assertIn(code_dsl_check.SEMANTIC, self.codes(bad_Refs))
+
+    def test_symlink_ancestor_and_json_number_surrogate_bounds_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            real = root / "real"
+            real.mkdir()
+            valid_copy = real / "valid.code-dsl.json"
+            valid_copy.write_text(json.dumps(self.valid), encoding="utf-8")
+
+            sym_dir = root / "sym_dir"
+            sym_dir.symlink_to(real)
+            trav = Path(f"{sym_dir}/../real/valid.code-dsl.json")
+            self.assertEqual(
+                [code_dsl_check.SYNTAX], [f.code for f in code_dsl_check.load_and_validate(trav)]
+            )
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(1, code_dsl_check.main(["validate", f"{sym_dir}/../real"]))
+
+            sub = root / "sub"
+            sub.mkdir()
+            old_cwd = Path.cwd()
+            try:
+                os.chdir(sub)
+                rel_findings = code_dsl_check.load_and_validate(
+                    Path("../sym_dir/valid.code-dsl.json")
+                )
+                self.assertEqual([code_dsl_check.SYNTAX], [f.code for f in rel_findings])
+            finally:
+                os.chdir(old_cwd)
+
+            for idx, payload in enumerate(
+                (
+                    '{"schema":"wellmanifest.code/json/v1","documents":[' + ("9" * 5000) + "]}\n",
+                    '{"schema":"wellmanifest.code/json/v1","documents":[1e999]}\n',
+                    '{"schema":"\\ud800","documents":[]}\n',
+                )
+            ):
+                bad_file = real / f"bad-{idx}.code-dsl.json"
+                bad_file.write_text(payload, encoding="utf-8")
+                res = code_dsl_check.load_and_validate(bad_file)
+                self.assertEqual([code_dsl_check.SYNTAX], [f.code for f in res], payload[:40])
+
+        deep: Any = "leaf"
+        for _ in range(70):
+            deep = {"a": deep}
+        self.assertEqual(
+            [code_dsl_check.SYNTAX], [f.code for f in code_dsl_check.validate_document(deep)]
+        )
+
+        surr = copy.deepcopy(self.valid)
+        surr["schema"] = "\ud800"
+        self.assertEqual(
+            [code_dsl_check.SYNTAX], [f.code for f in code_dsl_check.validate_document(surr)]
+        )
+
+    def test_nanosecond_timestamps_control_chars_git_branch_and_duplicate_id_confinement(
+        self,
+    ) -> None:
+        nano = copy.deepcopy(self.valid)
+        snap = next(doc for doc in nano["documents"] if doc["kind"] == "snapshot")
+        snap["observedAt"] = "2026-08-14T12:00:00.123456789Z"
+        self.assertEqual([], code_dsl_check.validate_document(nano))
+
+        for bad_ts in ("2026-08-14T12:00:00.1234567890Z", "2026-08-14T12:00:00Z\n"):
+            bad = copy.deepcopy(self.valid)
+            next(d for d in bad["documents"] if d["kind"] == "snapshot")["observedAt"] = bad_ts
+            self.assertIn(code_dsl_check.SYNTAX, self.codes(bad), repr(bad_ts))
+
+        multiline_hover = copy.deepcopy(self.valid)
+        hover_snap = next(
+            d
+            for d in multiline_hover["documents"]
+            if d["kind"] == "snapshot" and d["operation"] == "hover"
+        )
+        hover_snap["results"]["hover"]["value"] = "line 1\n\tline 2"
+        self.assertEqual([], code_dsl_check.validate_document(multiline_hover))
+
+        bad_ctrl = copy.deepcopy(multiline_hover)
+        bad_ctrl["documents"][0]["languageServers"][0]["command"] = ["pyright\x00"]
+        self.assertIn(code_dsl_check.SYNTAX, self.codes(bad_ctrl))
+
+        bad_hover_ctrl = copy.deepcopy(multiline_hover)
+        next(
+            d
+            for d in bad_hover_ctrl["documents"]
+            if d["kind"] == "snapshot" and d["operation"] == "hover"
+        )["results"]["hover"]["value"] = "ansi \x1b[31mred"
+        self.assertIn(code_dsl_check.SYNTAX, self.codes(bad_hover_ctrl))
+
+        for bad_branch in ("../../HEAD", "-option", "feat@{0}", "main.lock"):
+            branch_mut = copy.deepcopy(self.valid)
+            branch_mut["documents"][0]["git"]["branch"] = bad_branch
+            self.assertIn(code_dsl_check.SYNTAX, self.codes(branch_mut), bad_branch)
+
+        for query_or_frag in (
+            "file:///workspace/subactor-api/src/billing.rs?raw=1",
+            "file:///workspace/subactor-api/src/billing.rs#L1",
+        ):
+            qf_mut = copy.deepcopy(self.valid)
+            next(d for d in qf_mut["documents"] if d["kind"] == "query")["documentUri"] = (
+                query_or_frag
+            )
+            self.assertIn(code_dsl_check.BOUNDARY, self.codes(qf_mut), query_or_frag)
+
+        dup_escape = copy.deepcopy(self.valid)
+        first_query = next(d for d in dup_escape["documents"] if d["kind"] == "query")
+        second_query = copy.deepcopy(first_query)
+        first_query["documentUri"] = "file:///workspace/outside/escape.rs"
+        dup_escape["documents"].append(second_query)
+        dup_codes = self.codes(dup_escape)
+        self.assertIn(code_dsl_check.SEMANTIC, dup_codes)
+        self.assertIn(code_dsl_check.BOUNDARY, dup_codes)
 
 
 if __name__ == "__main__":
