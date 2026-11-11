@@ -13,13 +13,16 @@ SYNTAX = "CODE-SYNTAX-001"
 SEMANTIC = "CODE-SEMANTIC-001"
 BOUNDARY = "CODE-BOUNDARY-001"
 
-URI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:[^\s]+$")
-DIGEST_RE = re.compile(r"^sha256:[a-f0-9]{64}$")
-SHA_RE = re.compile(r"^[a-f0-9]{40}$")
-ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
-LANGUAGE_RE = re.compile(r"^[a-z0-9][a-z0-9+._-]*$")
+URI_RE = re.compile(r"\A[A-Za-z][A-Za-z0-9+.-]*:[^\s]+\Z")
+DIGEST_RE = re.compile(r"\Asha256:[a-f0-9]{64}\Z")
+SHA_RE = re.compile(r"\A[a-f0-9]{40}\Z")
+ID_RE = re.compile(r"\A[a-z0-9][a-z0-9._-]*\Z")
+LANGUAGE_RE = re.compile(r"\A[a-z0-9][a-z0-9+._-]*\Z")
+GIT_BRANCH_RE = re.compile(
+    r"\A(?![/-])(?!.*//)(?!.*\.\.)(?!.*@\{)[^\x00-\x20\x7f-\x9f~^:?*\[\\]+(?<!/)(?<!\.lock)\Z"
+)
 RFC3339_RE = re.compile(
-    r"^\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[Zz]|[+-]\d{2}:\d{2})$"
+    r"\A\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(?:\.(\d{1,9}))?(?:[Zz]|[+-]\d{2}:\d{2})\Z"
 )
 
 OPERATIONS = {
@@ -51,6 +54,16 @@ SYMBOL_KINDS = {
 
 def _is_strict_int(value: Any) -> bool:
     return not isinstance(value, bool) and isinstance(value, int)
+
+
+def _has_forbidden_controls(value: str, *, multiline: bool = False) -> bool:
+    for ch in value:
+        code = ord(ch)
+        if 0x7F <= code <= 0x9F:
+            return True
+        if code < 0x20 and (not multiline or ch not in "\n\r\t"):
+            return True
+    return False
 
 
 def _fully_unquote(raw_path: str) -> tuple[str, bool]:
@@ -109,10 +122,14 @@ class ShapeValidator:
         path: str,
         *,
         nonempty: bool = True,
+        multiline: bool = False,
         pattern: re.Pattern[str] | None = None,
     ) -> bool:
         if not isinstance(value, str) or (nonempty and not value):
             self.add(SYNTAX, path, "expected a non-empty string")
+            return False
+        if _has_forbidden_controls(value, multiline=multiline):
+            self.add(SYNTAX, path, "string contains forbidden control characters")
             return False
         if pattern is not None and pattern.fullmatch(value) is None:
             self.add(SYNTAX, path, "string does not match the required format")
@@ -133,15 +150,24 @@ class ShapeValidator:
             self.add(SYNTAX, path, "URI must have a scheme")
             return False
         decoded_path, converged = _fully_unquote(parsed.path)
+        decoded_netloc, netloc_converged = _fully_unquote(parsed.netloc)
         if (
             not converged
+            or not netloc_converged
             or "\x00" in decoded_path
+            or "\x00" in decoded_netloc
             or "\\" in decoded_path
+            or "\\" in decoded_netloc
             or ".." in decoded_path.split("/")
+            or ".." in decoded_netloc.split("/")
         ):
             self.add(BOUNDARY, path, "URI path traversal is forbidden")
             return False
-        if stable and parsed.scheme.lower() == "file":
+        scheme = parsed.scheme.lower()
+        if scheme == "file" and (parsed.query or parsed.fragment):
+            self.add(BOUNDARY, path, "file: URI query or fragment is forbidden")
+            return False
+        if stable and scheme == "file":
             self.add(BOUNDARY, path, "file: is an artifact location, not stable identity")
             return False
         return True
@@ -203,7 +229,7 @@ class ShapeValidator:
             if not isinstance(git["worktree"], bool):
                 self.add(SYNTAX, f"{path}.git.worktree", "expected a boolean")
             if git["branch"] is not None:
-                self.string(git["branch"], f"{path}.git.branch")
+                self.string(git["branch"], f"{path}.git.branch", pattern=GIT_BRANCH_RE)
             if git["revision"] is not None:
                 self.string(git["revision"], f"{path}.git.revision", pattern=SHA_RE)
             if not isinstance(git["dirty"], bool):
@@ -276,8 +302,8 @@ class ShapeValidator:
             self.uri(doc["documentUri"], f"{path}.documentUri", stable=False)
         if doc["position"] is not None:
             self.position(doc["position"], f"{path}.position")
-        if doc["symbol"] is not None and not isinstance(doc["symbol"], str):
-            self.add(SYNTAX, f"{path}.symbol", "expected a string or null")
+        if doc["symbol"] is not None:
+            self.string(doc["symbol"], f"{path}.symbol", nonempty=False)
         if doc["includeDeclaration"] is not None and not isinstance(
             doc["includeDeclaration"], bool
         ):
@@ -384,8 +410,12 @@ class ShapeValidator:
                 hover_fmt = value["hover"]["format"]
                 if not isinstance(hover_fmt, str) or hover_fmt not in {"plaintext", "markdown"}:
                     self.add(SYNTAX, f"{hover_path}.format", "unknown markup format")
-                if not isinstance(value["hover"]["value"], str):
-                    self.add(SYNTAX, f"{hover_path}.value", "expected a string")
+                self.string(
+                    value["hover"]["value"],
+                    f"{hover_path}.value",
+                    nonempty=False,
+                    multiline=True,
+                )
 
     def symbol_shape(self, value: Any, path: str) -> None:
         fields = (
@@ -419,8 +449,9 @@ class ShapeValidator:
         fields = ("source", "code", "severity", "message", "location", "relatedDomainUris")
         if not self.closed(value, path, fields, fields):
             return
-        for field in ("source", "code", "message"):
-            self.string(value[field], f"{path}.{field}")
+        self.string(value["source"], f"{path}.source")
+        self.string(value["code"], f"{path}.code")
+        self.string(value["message"], f"{path}.message", multiline=True)
         severity = value["severity"]
         if not isinstance(severity, str) or severity not in {
             "error",
@@ -440,10 +471,16 @@ class ShapeValidator:
     def timestamp(self, value: Any, path: str) -> None:
         if not self.string(value, path):
             return
-        if RFC3339_RE.fullmatch(value) is None:
+        match = RFC3339_RE.fullmatch(value)
+        if match is None:
             self.add(SYNTAX, path, "expected an RFC 3339 date-time")
             return
         normalized = value[:-1] + "+00:00" if value.endswith(("Z", "z")) else value
+        frac = match.group(1)
+        if frac is not None and len(frac) > 6:
+            dot_idx = normalized.index(".")
+            tz_idx = dot_idx + 1 + len(frac)
+            normalized = f"{normalized[:dot_idx]}.{frac[:6]}{normalized[tz_idx:]}"
         try:
             parsed = datetime.fromisoformat(normalized)
         except ValueError:

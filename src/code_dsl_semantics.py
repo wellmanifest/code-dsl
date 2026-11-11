@@ -60,6 +60,9 @@ class Validator(ShapeValidator):
         workspaces: dict[str, tuple[int, dict[str, Any]]] = {}
         queries: dict[str, tuple[int, dict[str, Any]]] = {}
         snapshots: dict[str, tuple[int, dict[str, Any]]] = {}
+        ws_list: list[tuple[str, int, dict[str, Any]]] = []
+        q_list: list[tuple[str, int, dict[str, Any]]] = []
+        snap_list: list[tuple[int, dict[str, Any]]] = []
 
         for index, doc in documents:
             kind = doc.get("kind")
@@ -78,13 +81,20 @@ class Validator(ShapeValidator):
                 self.add(
                     SEMANTIC, f"$.documents[{index}].{id_field}", "duplicate document identity"
                 )
-            target[identifier] = (index, doc)
+            else:
+                target[identifier] = (index, doc)
+            if kind == "workspace":
+                ws_list.append((identifier, index, doc))
+            elif kind == "query":
+                q_list.append((identifier, index, doc))
+            else:
+                snap_list.append((index, doc))
 
-        for workspace_id, (index, workspace) in workspaces.items():
+        for workspace_id, index, workspace in ws_list:
             self.workspace_semantic(workspace_id, index, workspace)
-        for query_id, (index, query) in queries.items():
+        for query_id, index, query in q_list:
             self.query_semantic(query_id, index, query, workspaces)
-        for _, (index, snapshot) in snapshots.items():
+        for index, snapshot in snap_list:
             self.snapshot_semantic(index, snapshot, workspaces, queries)
 
     def workspace_semantic(self, workspace_id: str, index: int, workspace: dict[str, Any]) -> None:
@@ -151,12 +161,15 @@ class Validator(ShapeValidator):
                 "hover": (True, True, False, False),
                 "definition": (True, True, False, False),
                 "references": (True, True, False, True),
-                "document_symbols": (True, False, False, False),
-                "workspace_symbols": (False, False, True, False),
             }.get(operation)
             if isinstance(operation, str)
             else None
         )
+        if expected is None and isinstance(operation, str):
+            expected = {
+                "document_symbols": (True, False, False, False),
+                "workspace_symbols": (False, False, True, False),
+            }.get(operation)
         if expected is not None:
             values = (
                 document is not None,
@@ -305,8 +318,9 @@ class Validator(ShapeValidator):
                 SEMANTIC, f"{path}.results", "unavailable snapshots must have an empty payload"
             )
 
-        result_count = sum(len(items) for items in list_fields.values())
-        result_count += int(results.get("hover") is not None)
+        result_count = sum(len(items) for items in list_fields.values()) + int(
+            results.get("hover") is not None
+        )
         if _is_strict_int(query.get("maxResults")) and result_count > query["maxResults"]:
             self.add(SEMANTIC, f"{path}.results", "result count exceeds the query bound")
 
@@ -379,10 +393,15 @@ class Validator(ShapeValidator):
         if (
             not root_converged
             or not artifact_converged
+            or root.query
+            or root.fragment
+            or artifact.query
+            or artifact.fragment
             or "\x00" in raw_root
             or "\x00" in raw_artifact
             or "\\" in raw_root
             or "\\" in raw_artifact
+            or ".." in raw_root.split("/")
             or ".." in raw_artifact.split("/")
         ):
             self.add(BOUNDARY, path, "artifact URI escapes the workspace root")

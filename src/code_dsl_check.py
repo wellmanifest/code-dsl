@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import copy
+import errno
 import json
+import math
 import os
 import stat
 import sys
@@ -20,6 +22,7 @@ from code_dsl_semantics import Validator  # noqa: E402
 from code_dsl_shapes import (  # noqa: E402
     BOUNDARY,
     DIGEST_RE,
+    GIT_BRANCH_RE,
     ID_RE,
     LANGUAGE_RE,
     OPERATIONS,
@@ -38,7 +41,7 @@ MAX_JSON_DEPTH = 64
 __all__ = [
     "BOUNDARY",
     "DIGEST_RE",
-    "Finding",
+    "GIT_BRANCH_RE",
     "ID_RE",
     "LANGUAGE_RE",
     "OPERATIONS",
@@ -48,6 +51,7 @@ __all__ = [
     "SYMBOL_KINDS",
     "SYNTAX",
     "URI_RE",
+    "Finding",
     "Validator",
     "build_parser",
     "discover",
@@ -63,6 +67,70 @@ class _StrictJsonError(ValueError):
     """Raised when raw JSON violates duplicate-key, finite-number, depth, or regular-file rules."""
 
 
+def _check_utf8_str(value: str) -> None:
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise _StrictJsonError("lone UTF-16 surrogate is forbidden") from exc
+
+
+def _check_no_symlink_ancestors(path: str | Path, *, include_self: bool = False) -> Path:
+    raw_path = os.fspath(path)
+    path_obj = Path(raw_path)
+    raw_parts = path_obj.parts if include_self else path_obj.parts[:-1]
+    if path_obj.is_absolute():
+        cur = Path(path_obj.anchor)
+        walk_parts = raw_parts[1:]
+    else:
+        cwd = Path.cwd()
+        if len(cwd.parts) > 2 and cwd.is_symlink():
+            raise _StrictJsonError(f"symlink ancestor is forbidden: {cwd}")
+        for anc in cwd.parents:
+            if len(anc.parts) > 2 and anc.is_symlink():
+                raise _StrictJsonError(f"symlink ancestor is forbidden: {anc}")
+        cur = cwd
+        walk_parts = raw_parts
+    for part in walk_parts:
+        if part in ("", "."):
+            continue
+        cur = cur / part
+        if part != ".." and len(cur.parts) > 2 and cur.is_symlink():
+            raise _StrictJsonError(f"symlink ancestor is forbidden: {cur}")
+    abs_path = Path(os.path.abspath(raw_path))
+    if include_self and abs_path.is_symlink():
+        raise _StrictJsonError(f"symlink path is forbidden: {path_obj}")
+    if any(anc.is_symlink() for anc in abs_path.parents if len(anc.parts) > 2):
+        raise _StrictJsonError(f"symlink ancestor is forbidden: {path_obj}")
+    return abs_path
+
+
+def _validate_json_tree(root: Any) -> None:
+    stack: list[tuple[Any, int]] = [(root, 0)]
+    while stack:
+        current, depth = stack.pop()
+        if depth > MAX_JSON_DEPTH:
+            raise _StrictJsonError("JSON nesting depth exceeded")
+        if isinstance(current, dict):
+            for key, val in current.items():
+                if isinstance(key, str):
+                    _check_utf8_str(key)
+                stack.append((val, depth + 1))
+        elif isinstance(current, list):
+            for val in current:
+                stack.append((val, depth + 1))
+        elif isinstance(current, str):
+            _check_utf8_str(current)
+        elif isinstance(current, float) and not math.isfinite(current):
+            raise _StrictJsonError("non-finite JSON float is forbidden")
+        elif not isinstance(current, bool) and isinstance(current, int):
+            try:
+                ok = math.isfinite(float(current))
+            except OverflowError:
+                ok = False
+            if not ok:
+                raise _StrictJsonError("JSON integer magnitude exceeds finite range")
+
+
 def _strict_loads(raw: str) -> Any:
     def _no_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
         result: dict[str, Any] = {}
@@ -75,50 +143,82 @@ def _strict_loads(raw: str) -> Any:
     def _no_constants(token: str) -> Any:
         raise _StrictJsonError(f"non-finite JSON constant {token}")
 
+    def _finite_float(token: str) -> float:
+        parsed_float = float(token)
+        if not math.isfinite(parsed_float):
+            raise _StrictJsonError(f"non-finite JSON number {token}")
+        return parsed_float
+
+    def _finite_int(token: str) -> int:
+        if len(token.removeprefix("-")) > 309:
+            raise _StrictJsonError("JSON integer magnitude exceeds finite range")
+        parsed_int = int(token)
+        try:
+            ok = math.isfinite(float(parsed_int))
+        except OverflowError:
+            ok = False
+        if not ok:
+            raise _StrictJsonError("JSON integer magnitude exceeds finite range")
+        return parsed_int
+
+    _check_utf8_str(raw)
     try:
-        parsed = json.loads(raw, object_pairs_hook=_no_duplicates, parse_constant=_no_constants)
+        parsed = json.loads(
+            raw,
+            object_pairs_hook=_no_duplicates,
+            parse_constant=_no_constants,
+            parse_float=_finite_float,
+            parse_int=_finite_int,
+        )
     except RecursionError as error:
         raise _StrictJsonError("JSON nesting depth exceeded") from error
-
-    stack: list[tuple[Any, int]] = [(parsed, 0)]
-    while stack:
-        current, depth = stack.pop()
-        if depth > MAX_JSON_DEPTH:
-            raise _StrictJsonError("JSON nesting depth exceeded")
-        if isinstance(current, dict):
-            stack.extend(
-                (val, depth + 1) for val in current.values() if isinstance(val, (dict, list))
-            )
-        elif isinstance(current, list):
-            stack.extend((val, depth + 1) for val in current if isinstance(val, (dict, list)))
+    except ValueError as error:
+        raise _StrictJsonError(str(error)) from error
+    _validate_json_tree(parsed)
     return parsed
 
 
 def _safe_read_json(path: Path) -> Any:
+    raw_path = os.fspath(path)
+    _check_no_symlink_ancestors(raw_path, include_self=False)
+    lst = os.lstat(raw_path)
+    if stat.S_ISLNK(lst.st_mode):
+        raise _StrictJsonError("symlink input is forbidden")
+    if not stat.S_ISREG(lst.st_mode):
+        raise _StrictJsonError("input must be a regular file")
     flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
-    fd = os.open(os.fspath(path), flags)
+    try:
+        fd = os.open(raw_path, flags)
+    except OSError as exc:
+        if exc.errno == errno.ELOOP:
+            raise _StrictJsonError("symlink input is forbidden") from exc
+        raise
     try:
         st = os.fstat(fd)
         if not stat.S_ISREG(st.st_mode):
             raise _StrictJsonError("input must be a regular file")
+        if (st.st_dev, st.st_ino) != (lst.st_dev, lst.st_ino):
+            raise _StrictJsonError("input inode changed during open")
         if st.st_size > MAX_CODE_DSL_BYTES:
             raise _StrictJsonError("input exceeds maximum byte budget")
-        chunks: list[bytes] = []
-        total = 0
+        chunks = bytearray()
         while True:
-            chunk = os.read(fd, 65536)
+            chunk = os.read(fd, min(65536, MAX_CODE_DSL_BYTES + 1 - len(chunks)))
             if not chunk:
                 break
-            total += len(chunk)
-            if total > MAX_CODE_DSL_BYTES:
+            chunks.extend(chunk)
+            if len(chunks) > MAX_CODE_DSL_BYTES:
                 raise _StrictJsonError("input exceeds maximum byte budget")
-            chunks.append(chunk)
     finally:
         os.close(fd)
-    return _strict_loads(b"".join(chunks).decode("utf-8"))
+    return _strict_loads(bytes(chunks).decode("utf-8"))
 
 
 def validate_document(data: Any) -> list[Finding]:
+    try:
+        _validate_json_tree(data)
+    except _StrictJsonError as exc:
+        return [Finding(SYNTAX, "$", f"invalid JSON value: {exc}")]
     return Validator().validate(data)
 
 
@@ -131,9 +231,11 @@ def load_and_validate(path: Path) -> list[Finding]:
 
 
 def discover(target: Path) -> list[Path]:
-    if target.is_symlink():
+    try:
+        _check_no_symlink_ancestors(target, include_self=False)
+    except _StrictJsonError:
         return [target]
-    if target.is_file():
+    if target.is_symlink() or target.is_file():
         return [target]
     if target.is_dir():
         discovered: list[Path] = []
