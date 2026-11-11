@@ -25,6 +25,42 @@ DIGEST_RE = re.compile(r"^sha256:[a-f0-9]{64}$")
 SHA_RE = re.compile(r"^[a-f0-9]{40}$")
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 LANGUAGE_RE = re.compile(r"^[a-z0-9][a-z0-9+._-]*$")
+RFC3339_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[Zz]|[+-]\d{2}:\d{2})$"
+)
+
+
+class _StrictJsonError(ValueError):
+    """Raised when raw JSON contains duplicate keys or non-finite numbers."""
+
+
+def _strict_loads(raw: str) -> Any:
+    def _no_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise _StrictJsonError(f"duplicate JSON key {key!r}")
+            result[key] = value
+        return result
+
+    def _no_constants(token: str) -> Any:
+        raise _StrictJsonError(f"non-finite JSON constant {token}")
+
+    return json.loads(raw, object_pairs_hook=_no_duplicates, parse_constant=_no_constants)
+
+
+def _is_strict_int(value: Any) -> bool:
+    return not isinstance(value, bool) and isinstance(value, int)
+
+
+def _fully_unquote(raw_path: str) -> str:
+    current = raw_path
+    for _ in range(4):
+        decoded = unquote(current)
+        if decoded == current:
+            break
+        current = decoded
+    return current
 
 OPERATIONS = {
     "diagnostics",
@@ -67,10 +103,12 @@ class Finding:
 class Validator:
     def __init__(self) -> None:
         self.findings: list[Finding] = []
+        self._seen: set[Finding] = set()
 
     def add(self, code: str, path: str, message: str) -> None:
         finding = Finding(code, path, message)
-        if finding not in self.findings:
+        if finding not in self._seen:
+            self._seen.add(finding)
             self.findings.append(finding)
 
     def closed(
@@ -120,9 +158,10 @@ class Validator:
         if not parsed.scheme:
             self.add(SYNTAX, path, "URI must have a scheme")
             return False
-        decoded_parts = unquote(parsed.path).split("/")
-        if ".." in decoded_parts:
+        decoded_path = _fully_unquote(parsed.path)
+        if "\x00" in decoded_path or "\\" in decoded_path or ".." in decoded_path.split("/"):
             self.add(BOUNDARY, path, "URI path traversal is forbidden")
+            return False
         if stable and parsed.scheme.lower() == "file":
             self.add(BOUNDARY, path, "file: is an artifact location, not stable identity")
             return False
@@ -265,7 +304,7 @@ class Validator:
         if doc["freshness"] not in {"live", "cached_allowed"}:
             self.add(SYNTAX, f"{path}.freshness", "unknown freshness")
         self.integer(doc["maxResults"], f"{path}.maxResults", 1)
-        if isinstance(doc["maxResults"], int) and doc["maxResults"] > 10000:
+        if _is_strict_int(doc["maxResults"]) and doc["maxResults"] > 10000:
             self.add(SYNTAX, f"{path}.maxResults", "must be <= 10000")
 
     def snapshot_shape(self, doc: dict[str, Any], path: str) -> None:
@@ -409,9 +448,16 @@ class Validator:
     def timestamp(self, value: Any, path: str) -> None:
         if not self.string(value, path):
             return
+        if RFC3339_RE.fullmatch(value) is None:
+            self.add(SYNTAX, path, "expected an RFC 3339 date-time")
+            return
+        normalized = value[:-1] + "+00:00" if value.endswith(("Z", "z")) else value
         try:
-            datetime.fromisoformat(value.replace("Z", "+00:00"))
+            parsed = datetime.fromisoformat(normalized)
         except ValueError:
+            self.add(SYNTAX, path, "expected an RFC 3339 date-time")
+            return
+        if parsed.tzinfo is None:
             self.add(SYNTAX, path, "expected an RFC 3339 date-time")
 
     def validate(self, data: Any) -> list[Finding]:
@@ -501,7 +547,7 @@ class Validator:
         if all(isinstance(item[0], str) and isinstance(item[1], str) for item in sort_keys):
             self.require_sorted_unique(sort_keys, f"{path}.languageServers")
         maximum = limits.get("maxLanguagesPerWorkspace")
-        if isinstance(maximum, int) and len(servers) > maximum:
+        if _is_strict_int(maximum) and len(servers) > maximum:
             self.add(
                 SEMANTIC,
                 f"{path}.limits.maxLanguagesPerWorkspace",
@@ -672,7 +718,7 @@ class Validator:
             len(results.get(field, [])) for field in ("symbols", "locations", "diagnostics")
         )
         result_count += int(results.get("hover") is not None)
-        if isinstance(query.get("maxResults"), int) and result_count > query["maxResults"]:
+        if _is_strict_int(query.get("maxResults")) and result_count > query["maxResults"]:
             self.add(SEMANTIC, f"{path}.results", "result count exceeds the query bound")
 
         self.check_result_order(results, path)
@@ -735,8 +781,19 @@ class Validator:
     def confined(self, root_uri: str, artifact_uri: str, path: str) -> None:
         root = urlsplit(root_uri)
         artifact = urlsplit(artifact_uri)
-        root_path = posixpath.normpath(unquote(root.path))
-        artifact_path = posixpath.normpath(unquote(artifact.path))
+        raw_root = _fully_unquote(root.path)
+        raw_artifact = _fully_unquote(artifact.path)
+        if (
+            "\x00" in raw_root
+            or "\x00" in raw_artifact
+            or "\\" in raw_root
+            or "\\" in raw_artifact
+            or ".." in raw_artifact.split("/")
+        ):
+            self.add(BOUNDARY, path, "artifact URI escapes the workspace root")
+            return
+        root_path = posixpath.normpath(raw_root)
+        artifact_path = posixpath.normpath(raw_artifact)
         same_origin = (root.scheme.lower(), root.netloc) == (
             artifact.scheme.lower(),
             artifact.netloc,
@@ -754,29 +811,30 @@ class Validator:
     @staticmethod
     def location_key(location: dict[str, Any]) -> tuple[Any, ...] | None:
         try:
+            artifact_uri = location["artifactUri"]
             start = location["range"]["start"]
             end = location["range"]["end"]
-            return (
-                location["artifactUri"],
-                start["line"],
-                start["character"],
-                end["line"],
-                end["character"],
-            )
+            coords = (start["line"], start["character"], end["line"], end["character"])
         except (KeyError, TypeError):
             return None
+        if not isinstance(artifact_uri, str) or not all(_is_strict_int(item) for item in coords):
+            return None
+        return (artifact_uri, *coords)
 
     @classmethod
     def diagnostic_key(cls, diagnostic: dict[str, Any]) -> tuple[Any, ...] | None:
-        location = cls.location_key(diagnostic.get("location", {}))
+        raw_location = diagnostic.get("location")
+        if not isinstance(raw_location, dict):
+            return None
+        location = cls.location_key(raw_location)
         if location is None:
             return None
-        return (
-            *location[:3],
-            diagnostic.get("severity"),
-            diagnostic.get("code"),
-            diagnostic.get("message"),
-        )
+        severity = diagnostic.get("severity")
+        code = diagnostic.get("code")
+        message = diagnostic.get("message")
+        if not all(isinstance(item, str) for item in (severity, code, message)):
+            return None
+        return (*location[:3], severity, code, message)
 
 
 def validate_document(data: Any) -> list[Finding]:
@@ -785,8 +843,8 @@ def validate_document(data: Any) -> list[Finding]:
 
 def load_and_validate(path: Path) -> list[Finding]:
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        data = _strict_loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError, _StrictJsonError) as exc:
         return [Finding(SYNTAX, str(path), f"cannot parse JSON: {exc}")]
     return validate_document(data)
 

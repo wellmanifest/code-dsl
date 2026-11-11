@@ -1,0 +1,88 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-006",
+  "summary": "Harden Code DSL URI traversal, RFC 3339, mixed-type sort safety, and pytest integration",
+  "workstream": "integration",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-006/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "examples/dsl-manifest.json",
+    "pyproject.toml",
+    "src/code_dsl_check.py",
+    "tests/test_code_dsl.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a143b479705004f116c1cb59dae413bc1c36e8db",
+    "targetBranch": "main",
+    "outcome": "Eliminate mixed-type sort crashes, boolean-int pitfalls, URI double-encoding/backslash traversal bypasses, permissive timestamp checks, duplicate JSON key shadowing, and standalone pytest import errors in wellmanifest/code-dsl.",
+    "nonGoals": [
+      "Do not modify proto/ or schemas/ wire schemas",
+      "Do not add runtime dependencies",
+      "Do not edit managed .governance files"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Enforce strict JSON decoding, multi-round URI path unquoting + separator rejection, strict RFC 3339 validation, type-safe sort keys, O(1) finding deduplication in src/code_dsl_check.py, pytest pythonpath configuration in pyproject.toml, and synchronized digest in examples/dsl-manifest.json.",
+      "components": [
+        {
+          "name": "code-dsl-validator-and-tests",
+          "paths": [
+            "src/code_dsl_check.py",
+            "tests/test_code_dsl.py",
+            "pyproject.toml"
+          ]
+        },
+        {
+          "name": "dsl-manifest-projection",
+          "paths": [
+            "examples/dsl-manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commit on main to restore the prior validator and manifest digest."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 src/code_dsl_check.py validate examples/valid",
+          "python3 src/code_dsl_check.py self-test",
+          "python3 -m unittest discover -s tests -v",
+          "pytest -q",
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "evidence": "All unit, self-test, dsl-manifest, ruff, governance, and wellman checks pass."
+      }
+    ]
+  }
+}
