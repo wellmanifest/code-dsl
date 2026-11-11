@@ -58,7 +58,17 @@
     {
       "path": "src/code_dsl_check.py",
       "role": "parser-contract",
-      "digest": "sha256:e2ae552e69d709a7c32a35c3b2395b008bbd27fceb91e3c6b1cba45658e031e2"
+      "digest": "sha256:4cb15a215afa71061b2f5f6b2d9cad27d7793441f6b21ad810b8e955228a75f7"
+    },
+    {
+      "path": "src/code_dsl_shapes.py",
+      "role": "parser-contract",
+      "digest": "sha256:b21bfdac8a3335d4c83363d498c76dcc98227ec9140577e7b019ea32188e36e5"
+    },
+    {
+      "path": "src/code_dsl_semantics.py",
+      "role": "parser-contract",
+      "digest": "sha256:49654b2d00ca5a8bd07dd5e8ff71e12e9ba9b31014403c1d9ef1304fdcc003b0"
     },
     {
       "path": "examples/valid/subactor-workspace.code-dsl.json",
