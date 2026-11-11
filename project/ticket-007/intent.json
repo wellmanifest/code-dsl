@@ -1,0 +1,99 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-007",
+  "summary": "Modularize code_dsl_check under 500 lines and harden unhashable JSON and file I/O",
+  "workstream": "integration",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-007/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "examples/dsl-manifest.json",
+    "src/code_dsl_check.py",
+    "src/code_dsl_semantics.py",
+    "src/code_dsl_shapes.py",
+    "tests/test_code_dsl.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "698f2de611437fd2426570f4b6d2e95dfcd07fc9",
+    "targetBranch": "main",
+    "outcome": "Split src/code_dsl_check.py (930 lines) into three <500-line modules, eliminate unhashable/malformed-container runtime crashes, enforce O_NOFOLLOW + nesting-depth JSON loading, and synchronize parser-contract digests in examples/dsl-manifest.json.",
+    "nonGoals": [
+      "Do not modify proto/ or schemas/ wire schemas",
+      "Do not add runtime dependencies"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Factor structural shape checks and bounded regular-file JSON loading into src/code_dsl_shapes.py, cross-document semantic checks into src/code_dsl_semantics.py, and CLI/public exports into src/code_dsl_check.py while updating examples/dsl-manifest.json.",
+      "components": [
+        {
+          "name": "code-dsl-validator-and-tests",
+          "paths": [
+            "src/code_dsl_check.py",
+            "src/code_dsl_shapes.py",
+            "src/code_dsl_semantics.py",
+            "tests/test_code_dsl.py"
+          ]
+        },
+        {
+          "name": "dsl-manifest-projection",
+          "paths": [
+            "examples/dsl-manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "Update parser-contract SHA-256 digests in examples/dsl-manifest.json"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded commit via protected PR delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "ruff check src tests",
+          "python3 -m unittest discover -s tests -v"
+        ],
+        "evidence": "project/ticket-007/README.md"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 src/code_dsl_check.py validate examples/valid",
+          "python3 src/code_dsl_check.py self-test",
+          "python3 ../dsl/src/dsl_check.py validate examples/dsl-manifest.json",
+          "./project/governance-check.sh --actor ci --base 698f2de611437fd2426570f4b6d2e95dfcd07fc9 --head HEAD",
+          "wellman check"
+        ],
+        "evidence": "project/ticket-007/README.md"
+      }
+    ]
+  }
+}

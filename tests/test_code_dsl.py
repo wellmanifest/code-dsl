@@ -167,6 +167,56 @@ class CodeDslConformanceTests(unittest.TestCase):
             findings = code_dsl_check.load_and_validate(dup)
             self.assertEqual([code_dsl_check.SYNTAX], [f.code for f in findings])
 
+            link = Path(directory) / "symlink.code-dsl.json"
+            link.symlink_to(self.valid_path)
+            link_findings = code_dsl_check.load_and_validate(link)
+            self.assertEqual([code_dsl_check.SYNTAX], [f.code for f in link_findings])
+            self.assertEqual(1, code_dsl_check.main(["validate", str(link)]))
+            self.assertEqual(1, code_dsl_check.main(["validate", directory]))
+
+            deep = Path(directory) / "deep.code-dsl.json"
+            deep.write_text('{"a":' * 128 + "1" + "}" * 128, encoding="utf-8")
+            deep_findings = code_dsl_check.load_and_validate(deep)
+            self.assertEqual([code_dsl_check.SYNTAX], [f.code for f in deep_findings])
+            self.assertIn("nesting depth", deep_findings[0].message)
+
+    def test_unhashable_fields_non_list_containers_and_module_line_budgets(self) -> None:
+        for mod_name in ("code_dsl_check.py", "code_dsl_shapes.py", "code_dsl_semantics.py"):
+            lines = len((ROOT / "src" / mod_name).read_text(encoding="utf-8").splitlines())
+            self.assertLess(lines, 500, f"{mod_name} has {lines} lines")
+
+        mutation = copy.deepcopy(self.valid)
+        workspace = mutation["documents"][0]
+        workspace["locality"] = {"unhashable": 1}
+        workspace["git"] = ["not-a-dict"]
+        workspace["languageServers"] = [
+            {
+                "serverId": ["unhashable"],
+                "language": {"unhashable": 1},
+                "command": ["rust-analyzer"],
+                "transport": "stdio",
+                "version": "1.0",
+                "configurationDigest": "sha256:" + "0" * 64,
+            }
+        ]
+        query = next(doc for doc in mutation["documents"] if doc["kind"] == "query")
+        query["operation"] = {"unhashable": 1}
+        query["freshness"] = ["unhashable"]
+        query["documentUri"] = 12345
+        snapshot = next(doc for doc in mutation["documents"] if doc["kind"] == "snapshot")
+        snapshot["operation"] = ["unhashable"]
+        snapshot["status"] = {"unhashable": 1}
+        snapshot["results"]["symbols"] = 999
+        codes = self.codes(mutation)
+        self.assertIn(code_dsl_check.SYNTAX, codes)
+
+        bad_Refs = copy.deepcopy(self.valid)
+        bad_Refs["documents"][1]["workspaceId"] = {"unhashable": 1}
+        bad_Refs["documents"][-1]["workspaceId"] = ["unhashable"]
+        bad_Refs["documents"][-1]["queryId"] = {"unhashable": 1}
+        self.assertIn(code_dsl_check.SYNTAX, self.codes(bad_Refs))
+        self.assertIn(code_dsl_check.SEMANTIC, self.codes(bad_Refs))
+
 
 if __name__ == "__main__":
     unittest.main()
