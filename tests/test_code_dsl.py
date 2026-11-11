@@ -4,6 +4,7 @@ import copy
 import importlib.util
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -119,6 +120,52 @@ class CodeDslConformanceTests(unittest.TestCase):
         )
         for message in ("CodeDocumentSet", "Workspace", "SemanticQuery", "SemanticSnapshot"):
             self.assertIn(f"message {message}", proto)
+
+    def test_double_encoded_and_backslash_uri_traversal_rejected(self) -> None:
+        for bad_uri in (
+            "file:///workspace/subactor-api/%252e%252e/other/secret.rs",
+            "file:///workspace/subactor-api\\..\\other\\secret.rs",
+            "file:///workspace/subactor-api/src/billing.rs%00.txt",
+        ):
+            mutation = copy.deepcopy(self.valid)
+            query = next(doc for doc in mutation["documents"] if doc["kind"] == "query")
+            query["documentUri"] = bad_uri
+            findings = code_dsl_check.validate_document(mutation)
+            self.assertIn(code_dsl_check.BOUNDARY, {f.code for f in findings}, bad_uri)
+
+    def test_strict_rfc3339_timestamps_enforced(self) -> None:
+        for bad_ts in ("2026-08-14", "2026-08-14T12:00:00", "2026-08-14 12:00:00Z"):
+            mutation = copy.deepcopy(self.valid)
+            snapshot = next(doc for doc in mutation["documents"] if doc["kind"] == "snapshot")
+            snapshot["observedAt"] = bad_ts
+            self.assertIn(code_dsl_check.SYNTAX, self.codes(mutation), bad_ts)
+
+    def test_mixed_type_diagnostics_and_bool_limits_do_not_crash(self) -> None:
+        mutation = copy.deepcopy(self.valid)
+        diagnostic_snapshot = next(
+            doc
+            for doc in mutation["documents"]
+            if doc.get("operation") == "diagnostics" and doc["kind"] == "snapshot"
+        )
+        valid_diag = copy.deepcopy(diagnostic_snapshot["results"]["diagnostics"][0])
+        bad_diag = copy.deepcopy(valid_diag)
+        bad_diag["severity"] = 42
+        diagnostic_snapshot["results"]["diagnostics"] = [valid_diag, bad_diag]
+        self.assertIn(code_dsl_check.SYNTAX, self.codes(mutation))
+
+        bool_mutation = copy.deepcopy(self.valid)
+        bool_mutation["documents"][0]["limits"]["maxLanguagesPerWorkspace"] = False
+        query = next(doc for doc in bool_mutation["documents"] if doc["kind"] == "query")
+        query["maxResults"] = True
+        codes = self.codes(bool_mutation)
+        self.assertIn(code_dsl_check.SYNTAX, codes)
+
+    def test_duplicate_json_keys_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            dup = Path(directory) / "dup.code-dsl.json"
+            dup.write_text('{"schema":"a","schema":"b","documents":[]}\n', encoding="utf-8")
+            findings = code_dsl_check.load_and_validate(dup)
+            self.assertEqual([code_dsl_check.SYNTAX], [f.code for f in findings])
 
 
 if __name__ == "__main__":

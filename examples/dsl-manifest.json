@@ -58,7 +58,7 @@
     {
       "path": "src/code_dsl_check.py",
       "role": "parser-contract",
-      "digest": "sha256:dca76daf15458f41a345812c2e0e6676c4464a21f5bd7b74e11065c39a79cb44"
+      "digest": "sha256:e2ae552e69d709a7c32a35c3b2395b008bbd27fceb91e3c6b1cba45658e031e2"
     },
     {
       "path": "examples/valid/subactor-workspace.code-dsl.json",
@@ -73,7 +73,7 @@
     {
       "path": "docs/ARCHITECTURE.md",
       "role": "documentation",
-      "digest": "sha256:c8bee722ee2d242cb044951781c15f896acab930cb9d7604601a70f910fe7c88"
+      "digest": "sha256:f29e46bdbdfc6066f0bb28bba4b7bee5b16702b3843817009c707f87d95ebc2a"
     },
     {
       "path": "docs/LOGIC_FLOW.md",
@@ -139,15 +139,18 @@
     "authoritySchema": null
   },
   "llm": {
-    "mode": "input",
+    "mode": "bidirectional",
     "requestSchemas": [
       "https://wellmanifest.com/schemas/code-dsl/v1"
     ],
-    "responseSchemas": [],
+    "responseSchemas": [
+      "https://wellmanifest.com/schemas/code-dsl/v1"
+    ],
     "naturalLanguage": "typed-source-only",
     "sourceSchema": "https://wellmanifest.com/schemas/code-dsl/v1",
     "modelAuthority": "propose-only",
-    "strict": true
+    "strict": true,
+    "decisionProtocol": "nl-to-dsl-input-output"
   },
   "documentation": {
     "vocabularyKind": "documents",
