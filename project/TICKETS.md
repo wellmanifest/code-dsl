@@ -13,4 +13,5 @@ This file is maintained by `project/readme.sh`.
 | **ticket-006** | [`README.md`](./ticket-006/README.md) | - | - | - | - | - |
 | **ticket-007** | [`README.md`](./ticket-007/README.md) | - | - | - | - | - |
 | **ticket-008** | [`README.md`](./ticket-008/README.md) | - | - | - | - | - |
+| **ticket-010** | [`README.md`](./ticket-010/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
